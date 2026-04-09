@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>HomePulse | Smart Home Management</title>
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.08), rgba(15, 23, 42, 0.02)), 
+                  linear-gradient(135deg, #f6f9fc 0%, #eef2f9 100%);
+      min-height: 100vh;
+      color: #0f172a;
+      line-height: 1.5;
+      position: relative;
+    }
+
+    /* Animated background particles effect */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 2000" opacity="0.3"><path fill="none" stroke="%233b82f6" stroke-width="1.5" d="M100 100L300 100M100 120L300 120M100 140L300 140"/><circle cx="400" cy="300" r="2" fill="%233b82f6"/><circle cx="700" cy="500" r="3" fill="%236366f1"/><circle cx="1100" cy="200" r="2" fill="%238b5cf6"/></svg>');
+      background-repeat: repeat;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      backdrop-filter: blur(0px);
+    }
+
+    /* Glassmorphic Header */
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.5);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 800;
+      font-size: 1.35rem;
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(145deg, #2563eb, #1e3a8a);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.3rem;
+      box-shadow: 0 6px 12px -6px rgba(37,99,235,0.3);
+    }
+
+    .desktop-nav {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: #334155;
+      font-weight: 600;
+      transition: 0.2s;
+      cursor: pointer;
+      padding: 0.5rem 0;
+      position: relative;
+    }
+
+    .nav-link.active, .nav-link:hover {
+      color: #2563eb;
+    }
+
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: #2563eb;
+      border-radius: 4px;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #1e293b;
+    }
+
+    /* Mobile drawer */
+    .mobile-drawer {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 280px;
+      height: 100%;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(16px);
+      box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+      transition: left 0.3s ease;
+      z-index: 200;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .mobile-drawer.open {
+      left: 0;
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .nav-link-mobile {
+      text-decoration: none;
+      font-weight: 600;
+      color: #1e293b;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+      width: 100%;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #1e40af, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.02em;
+    }
+
+    /* Glass Cards */
+    .stat-big, .chart-card, .complaint-form-card, .complaints-list-container, .profile-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border-radius: 1.75rem;
+      border: 1px solid rgba(255,255,255,0.6);
+      box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-big:hover, .chart-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-big {
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .stat-big i {
+      font-size: 2.5rem;
+      background: linear-gradient(145deg, #2563eb, #4f46e5);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat-big div h3 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.2rem;
+    }
+
+    .dashboard-charts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.8rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-card {
+      padding: 1.4rem;
+    }
+
+    .complaints-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 2rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.8rem 1rem;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 1.2rem;
+      font-family: inherit;
+      background: rgba(255,255,255,0.9);
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.7rem 1.4rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 0.9rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(105deg, #2563eb, #1e40af);
+      color: white;
+      box-shadow: 0 4px 8px rgba(37,99,235,0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+    }
+
+    .btn-outline {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(4px);
+      border: 1px solid #cbd5e1;
+    }
+
+    .complaints-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 550px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    .complaint-item {
+      background: white;
+      border-radius: 1.2rem;
+      padding: 1rem;
+      border: 1px solid #eef2ff;
+      transition: all 0.2s;
+    }
+
+    .status-badge {
+      font-size: 0.7rem;
+      padding: 0.25rem 0.8rem;
+      border-radius: 2rem;
+      font-weight: 600;
+    }
+
+    .status-badge.pending { background: #fef3c7; color: #b45309; }
+    .status-badge.in-progress { background: #dbeafe; color: #1e40af; }
+    .status-badge.resolved { background: #dcfce7; color: #166534; }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 2rem;
+    }
+
+    .avatar-large i {
+      font-size: 5rem;
+      background: linear-gradient(145deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .map-legend {
+      display: flex;
+      gap: 1.8rem;
+      justify-content: center;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(4px);
+      padding: 0.6rem 1rem;
+      border-radius: 3rem;
+      width: fit-content;
+      margin: 1rem auto 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255,255,255,0.8);
+      margin-top: 2rem;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      .desktop-nav { display: none; }
+      .mobile-menu-btn { display: block; }
+      .complaints-layout, .profile-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .main-content { padding: 0 1rem; }
+    }
+
+    /* Extra modern elements */
+    .glass-tag {
+      background: rgba(59,130,246,0.1);
+      backdrop-filter: blur(4px);
+      border-radius: 2rem;
+      padding: 0.2rem 0.8rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+    .quick-actions {
+      margin-top: 1rem;
+    }
+    .city-status {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="main-header">
+    <div class="logo">
+      <div class="logo-icon"><i class="fas fa-house-chimney"></i></div>
+      <span>HomePulse <span style="font-size:0.8rem; font-weight:400;">| Smart Home</span></span>
+    </div>
+    <nav class="desktop-nav">
+      <a class="nav-link" data-page="dashboard">Overview</a>
+      <a class="nav-link" data-page="map">Rooms</a>
+      <a class="nav-link" data-page="complaints">Devices</a>
+      <a class="nav-link" data-page="analytics">Energy</a>
+      <a class="nav-link" data-page="profile">Security</a>
+    </nav>
+    <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></div>
+  </header>
+
+  <div class="mobile-drawer" id="mobileDrawer">
+    <div class="drawer-header"><span>HomePulse Menu</span><i class="fas fa-times" id="closeDrawer"></i></div>
+    <a class="nav-link-mobile" data-page="dashboard">Overview</a>
+    <a class="nav-link-mobile" data-page="map">Rooms</a>
+    <a class="nav-link-mobile" data-page="complaints">Devices</a>
+    <a class="nav-link-mobile" data-page="analytics">Energy</a>
+    <a class="nav-link-mobile" data-page="profile">Security</a>
+  </div>
+
+  <main class="main-content" id="mainContent">
+    <div id="pageContainer"></div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 HomePulse - Smart home management for comfort, security, and energy control.</p>
+  </footer>
+</div>
+
+<script>
+  // ---------- DATA LAYER (persistent) ----------
+  const STORAGE_KEY = 'cityguard_complaints';
+  const PROFILE_KEY = 'cityguard_profile';
+
+  let complaints = [];
+  let userProfile = { name: 'Elena Rodriguez', email: 'elena.rodriguez@citymail.com' };
+
+  const defaultComplaints = [
+    { id: 'c1', title: 'Pothole on MG Road', category: 'Infrastructure', description: 'Deep pothole near signal, dangerous for vehicles', location: 'MG Road', status: 'in-progress', createdAt: new Date(Date.now() - 2*86400000).toISOString() },
+    { id: 'c2', title: 'Garbage overflow at Sector 12', category: 'Sanitation', description: 'Waste not collected for 3 days', location: 'Sector 12', status: 'pending', createdAt: new Date(Date.now() - 86400000).toISOString() },
+    { id: 'c3', title: 'Street light outage - Park Street', category: 'Electricity', description: 'Complete dark stretch, safety issue', location: 'Park Street', status: 'resolved', createdAt: new Date(Date.now() - 5*86400000).toISOString() },
+    { id: 'c4', title: 'Water leakage at Fountain Chowk', category: 'Water Supply', description: 'Pipeline burst, water wastage', location: 'Fountain Chowk', status: 'in-progress', createdAt: new Date(Date.now() - 1*86400000).toISOString() }
+  ];
+
+  function loadData() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if(stored) complaints = JSON.parse(stored);
+    else complaints = defaultComplaints;
+    const storedProfile = localStorage.getItem(PROFILE_KEY);
+    if(storedProfile) userProfile = JSON.parse(storedProfile);
+    saveComplaints();
+  }
+
+  function saveComplaints() { localStorage.setItem(STORAGE_KEY, JSON.stringify(complaints)); }
+  function saveProfile() { localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile)); }
+
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+  // ---------- UI RENDERING ----------
+  let currentPage = 'dashboard';
+  let mapInstance = null;
+  let weeklyChart, categoryChart;
+
+  function renderDashboard() {
+    const total = complaints.length;
+    const pending = complaints.filter(c => c.status === 'pending').length;
+    const inProgress = complaints.filter(c => c.status === 'in-progress').length;
+    const resolved = complaints.filter(c => c.status === 'resolved').length;
+    const resolutionRate = total ? ((resolved / total)*100).toFixed(1) : 0;
+
+    const html = `
+      <div class="page-header"><h1><i class="fas fa-tachometer-alt"></i> Operations Dashboard</h1><p>AI-powered insights • Live city pulse</p></div>
+      <div class="city-status"><span class="glass-tag"><i class="fas fa-charging-station"></i> Smart City Index: 94</span><span class="glass-tag"><i class="fas fa-leaf"></i> Sustainability Score: A+</span><span class="glass-tag"><i class="fas fa-bolt"></i> Live Incidents: ${pending+inProgress}</span></div>
+      <div class="stats-grid">
+        <div class="stat-big"><i class="fas fa-chart-line"></i><div><h3>${total}</h3><span>Total Complaints</span></div></div>
+        <div class="stat-big"><i class="fas fa-hourglass-half"></i><div><h3>${pending}</h3><span>Pending</span></div></div>
+        <div class="stat-big"><i class="fas fa-tools"></i><div><h3>${inProgress}</h3><span>In Progress</span></div></div>
+        <div class="stat-big"><i class="fas fa-check-double"></i><div><h3>${resolved}</h3><span>Resolved</span></div></div>
+        <div class="stat-big"><i class="fas fa-chart-simple"></i><div><h3>${resolutionRate}%</h3><span>Resolution Rate</span></div></div>
+      </div>
+      <div class="dashboard-charts">
+        <div class="chart-card"><h3>Weekly Complaints Trend</h3><canvas id="weeklyChartCanvas" width="400" height="250"></canvas></div>
+        <div class="chart-card"><h3>Complaints by Category</h3><canvas id="categoryChartCanvas" width="400" height="250"></canvas></div>
+      </div>
+      <div class="quick-actions"><button class="btn btn-primary" id="quickReportBtn"><i class="fas fa-plus-circle"></i> Report New Issue</button><button class="btn btn-outline" id="refreshDashboard"><i class="fas fa-sync-alt"></i> Refresh Metrics</button></div>
+    `;
+    document.getElementById('pageContainer').innerHTML = html;
+    setTimeout(() => {
+      const weeklyCtx = document.getElementById('weeklyChartCanvas')?.getContext('2d');
+      const categoryCtx = document.getElementById('categoryChartCanvas')?.getContext('2d');
+      if(weeklyCtx) {
+        const last7 = Array(7).fill(0);
+        complaints.forEach(c => { const daysDiff = Math.floor((new Date() - new Date(c.createdAt)) / (1000*3600*24)); if(daysDiff>=0 && daysDiff<7) last7[6-daysDiff]++; });
+        if(weeklyChart) weeklyChart.destroy();
+        weeklyChart = new Chart(weeklyCtx, { type: 'bar', data: { labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets: [{ label: 'Complaints', data: last7, backgroundColor: '#3b82f6', borderRadius: 8 }] } });
+      }
+      if(categoryCtx) {
+        const cats = {};
+        complaints.forEach(c => cats[c.category] = (cats[c.category]||0)+1);
+        if(categoryChart) categoryChart.destroy();
+        categoryChart = new Chart(categoryCtx, { type: 'doughnut', data: { labels: Object.keys(cats), datasets: [{ data: Object.values(cats), backgroundColor: ['#3b82f6','#f97316','#10b981','#8b5cf6','#ef4444'] }] } });
+      }
+      document.getElementById('quickReportBtn')?.addEventListener('click', () => navigateTo('complaints'));
+      document.getElementById('refreshDashboard')?.addEventListener('click', () => renderDashboard());
+    }, 50);
+  }
+
+  function renderMap() {
+    const html = `<div class="page-header"><h1><i class="fas fa-map-marked-alt"></i> Live City Intelligence Map</h1><p>Real-time complaint tracking & resource allocation</p></div>
+                  <div id="mapContainer" style="height: 520px; width: 100%; border-radius: 28px; overflow: hidden; box-shadow: 0 12px 28px -8px rgba(0,0,0,0.2); margin-bottom: 1rem;"></div>
+                  <div class="map-legend"><span><i class="fas fa-circle" style="color:#ef4444;"></i> Critical/Pending</span><span><i class="fas fa-circle" style="color:#f97316;"></i> In-Progress</span><span><i class="fas fa-circle" style="color:#22c55e;"></i> Resolved</span><span><i class="fas fa-map-pin"></i> Active Zones</span></div>`;
+    document.getElementById('pageContainer').innerHTML = html;
+    setTimeout(() => initMap(), 100);
+  }
+
+  function initMap() {
+    if(mapInstance) { mapInstance.remove(); mapInstance = null; }
+    const container = document.getElementById('mapContainer');
+    if(!container) return;
+    mapInstance = L.map('mapContainer').setView([28.6139, 77.2090], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' }).addTo(mapInstance);
+    complaints.forEach(c => {
+      let lat = 28.6139 + (Math.random() - 0.5) * 0.09;
+      let lng = 77.2090 + (Math.random() - 0.5) * 0.09;
+      let color = c.status === 'pending' ? '#ef4444' : (c.status === 'in-progress' ? '#f97316' : '#22c55e');
+      L.circleMarker([lat, lng], { radius: 9, color: color, fillColor: color, fillOpacity: 0.7, weight: 2 }).addTo(mapInstance).bindPopup(`<b>${escapeHtml(c.title)}</b><br>${c.category}<br>Status: ${c.status}<br>📍 ${escapeHtml(c.location)}`);
+    });
+    // Add a decorative boundary
+    L.polygon([[28.58,77.15],[28.65,77.15],[28.65,77.27],[28.58,77.27]], { color: '#3b82f6', weight: 1, fillOpacity: 0.05 }).addTo(mapInstance);
+  }
+
+  function renderComplaints() {
+    const formHtml = `
+      <div class="page-header"><h1><i class="fas fa-clipboard-list"></i> Citizen Complaint Hub</h1><p>Submit, track, and escalate issues instantly</p></div>
+      <div class="complaints-layout">
+        <div class="complaint-form-card">
+          <h3><i class="fas fa-flag-checkered"></i> Report New Issue</h3>
+          <form id="complaintForm">
+            <input type="text" id="complaintTitle" placeholder="Title (e.g., Broken traffic light)" required>
+            <select id="complaintCategory" required><option value="Infrastructure">Infrastructure</option><option value="Sanitation">Sanitation</option><option value="Water Supply">Water Supply</option><option value="Electricity">Electricity</option><option value="Other">Other</option></select>
+            <textarea id="complaintDesc" rows="3" placeholder="Detailed description..."></textarea>
+            <input type="text" id="complaintLocation" placeholder="Location / Address">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Complaint</button>
+          </form>
+        </div>
+        <div class="complaints-list-container"><h3><i class="fas fa-tasks"></i> All Service Requests</h3><div id="complaintsList" class="complaints-list"></div></div>
+      </div>
+    `;
+    document.getElementById('pageContainer').innerHTML = formHtml;
+    renderComplaintsList();
+    bindComplaintForm();
+  }
+
+  function renderComplaintsList() {
+    const container = document.getElementById('complaintsList');
+    if(!container) return;
+    if(complaints.length === 0) { container.innerHTML = '<div class="empty-state">No complaints yet. Submit one!</div>'; return; }
+    container.innerHTML = complaints.map(c => `
+      <div class="complaint-item">
+        <div style="display:flex; justify-content:space-between; align-items:center"><strong>${escapeHtml(c.title)}</strong><span class="status-badge ${c.status}">${c.status}</span></div>
+        <small>${c.category} • ${new Date(c.createdAt).toLocaleDateString()}</small>
+        <p>${escapeHtml(c.description.substring(0,90))}${c.description.length>90?'…':''}</p>
+        <div><i class="fas fa-map-marker-alt"></i> ${escapeHtml(c.location)}</div>
+        <button class="btn-change-status" data-id="${c.id}" style="margin-top:8px; background:#f1f5f9; border:none; border-radius:2rem; padding:6px 14px; cursor:pointer; font-size:0.75rem;"><i class="fas fa-sync-alt"></i> Update Status</button>
+      </div>
+    `).join('');
+    document.querySelectorAll('.btn-change-status').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = btn.getAttribute('data-id');
+        const complaint = complaints.find(c => c.id === id);
+        if(complaint) {
+          let next = { pending: 'in-progress', 'in-progress': 'resolved', resolved: 'pending' }[complaint.status];
+          complaint.status = next;
+          saveComplaints();
+          if(currentPage === 'complaints') renderComplaintsList();
+          if(currentPage === 'dashboard') renderDashboard();
+          if(currentPage === 'profile') renderProfile();
+          if(currentPage === 'map') renderMap();
+        }
+      });
+    });
+  }
+
+  function bindComplaintForm() {
+    const form = document.getElementById('complaintForm');
+    if(!form) return;
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('complaintTitle').value.trim();
+      const category = document.getElementById('complaintCategory').value;
+      const desc = document.getElementById('complaintDesc').value.trim();
+      const location = document.getElementById('complaintLocation').value.trim();
+      if(!title) return alert('Please provide a title');
+      const newComplaint = {
+        id: Date.now().toString(),
+        title, category, description: desc || 'No details', location: location || 'City center',
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      complaints.unshift(newComplaint);
+      saveComplaints();
+      form.reset();
+      if(currentPage === 'complaints') renderComplaintsList();
+      if(currentPage === 'dashboard') renderDashboard();
+      if(currentPage === 'profile') renderProfile();
+      alert('✅ Complaint submitted successfully!');
+    });
+  }
+
+  function renderAnalytics() {
+    const html = `<div class="page-header"><h1><i class="fas fa-chart-line"></i> Deep City Analytics</h1><p>Predictive trends & operational efficiency</p></div>
+                  <div class="dashboard-charts">
+                    <div class="chart-card"><h3>Monthly Complaint Volume (Last 6 Months)</h3><canvas id="monthlyTrendChart" height="200"></canvas></div>
+                    <div class="chart-card"><h3>Category Distribution</h3><canvas id="categoryPieChart" height="200"></canvas></div>
+                    <div class="chart-card"><h3>Average Resolution Time (Days)</h3><canvas id="efficiencyChart" height="200"></canvas></div>
+                  </div>`;
+    document.getElementById('pageContainer').innerHTML = html;
+    setTimeout(() => {
+      const monthlyCtx = document.getElementById('monthlyTrendChart')?.getContext('2d');
+      const pieCtx = document.getElementById('categoryPieChart')?.getContext('2d');
+      if(monthlyCtx) {
+        const months = ['Jan','Feb','Mar','Apr','May','Jun'];
+        const monthlyData = [0,0,0,0,0,0];
+        complaints.forEach(c => { const m = new Date(c.createdAt).getMonth(); if(m<6) monthlyData[m]++; });
+        new Chart(monthlyCtx, { type: 'line', data: { labels: months, datasets: [{ label: 'Complaints', data: monthlyData, borderColor: '#2563eb', tension: 0.3, fill: true, backgroundColor: 'rgba(37,99,235,0.05)' }] } });
+      }
+      if(pieCtx) {
+        const cats = {}; complaints.forEach(c => cats[c.category] = (cats[c.category]||0)+1);
+        new Chart(pieCtx, { type: 'pie', data: { labels: Object.keys(cats), datasets: [{ data: Object.values(cats), backgroundColor: ['#3b82f6','#f97316','#10b981','#a855f7','#ef4444'] }] } });
+      }
+      const effCtx = document.getElementById('efficiencyChart')?.getContext('2d');
+      if(effCtx) new Chart(effCtx, { type: 'bar', data: { labels: ['Infrastructure','Sanitation','Electricity','Water Supply'], datasets: [{ label: 'Avg resolution days', data: [3.2, 1.8, 2.5, 2.1], backgroundColor: '#f97316', borderRadius: 8 }] } });
+    }, 50);
+  }
+
+  function renderProfile() {
+    const userComplaints = complaints.slice(0,5);
+    const userListHtml = userComplaints.length === 0 ? '<p>No complaints filed yet.</p>' : userComplaints.map(c => `<div class="complaint-item"><strong>${escapeHtml(c.title)}</strong> <span class="status-badge ${c.status}">${c.status}</span><br><small>${new Date(c.createdAt).toLocaleDateString()}</small></div>`).join('');
+    const html = `<div class="page-header"><h1><i class="fas fa-user-circle"></i> Resident Profile</h1><p>Personalized civic dashboard</p></div>
+                  <div class="profile-grid">
+                    <div class="profile-card" style="text-align:center; padding:2rem;">
+                      <div class="avatar-large"><i class="fas fa-user-astronaut"></i></div>
+                      <h2 id="profileNameDisplay">${escapeHtml(userProfile.name)}</h2>
+                      <p id="profileEmailDisplay">${escapeHtml(userProfile.email)}</p>
+                      <p><i class="fas fa-badge-check" style="color:#3b82f6;"></i> Verified Resident • Ward 7</p>
+                      <button id="editProfileBtn" class="btn btn-outline" style="margin-top:1rem;"><i class="fas fa-edit"></i> Edit Profile</button>
+                    </div>
+                    <div class="profile-card" style="padding:1.5rem;">
+                      <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                      <div id="userComplaintsList">${userListHtml}</div>
+                    </div>
+                  </div>`;
+    document.getElementById('pageContainer').innerHTML = html;
+    document.getElementById('editProfileBtn')?.addEventListener('click', () => {
+      let newName = prompt('Update name', userProfile.name);
+      if(newName && newName.trim()) userProfile.name = newName.trim();
+      let newEmail = prompt('Update email', userProfile.email);
+      if(newEmail && newEmail.includes('@')) userProfile.email = newEmail;
+      saveProfile();
+      renderProfile();
+    });
+  }
+
+  function navigateTo(page) {
+    currentPage = page;
+    document.querySelectorAll('.nav-link, .nav-link-mobile').forEach(link => {
+      if(link.getAttribute('data-page') === page) link.classList.add('active');
+      else link.classList.remove('active');
+    });
+    if(page === 'dashboard') renderDashboard();
+    else if(page === 'map') renderMap();
+    else if(page === 'complaints') renderComplaints();
+    else if(page === 'analytics') renderAnalytics();
+    else if(page === 'profile') renderProfile();
+    document.getElementById('mobileDrawer')?.classList.remove('open');
+  }
+
+  // Legacy city dashboard bootstrap disabled.
+</script>
+  <script src="homepulse.js"></script>
+</body>
+</html>

@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ArtVista | Contemporary Art Gallery — 3D Experience</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #fefaf5;
+      color: #1e1a15;
+      scroll-behavior: smooth;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Custom variables */
+    :root {
+      --primary: #b45f2b;
+      --primary-dark: #8b4513;
+      --secondary: #2c2b28;
+      --light-bg: #fffaf5;
+      --card-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Header & Navigation */
+    header {
+      background-color: #ffffffdd;
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid #e9e2d9;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 0;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #b45f2b, #d98a3c);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .logo span {
+      font-weight: 300;
+      color: #5c3e2b;
+      background: none;
+      -webkit-background-clip: unset;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-weight: 500;
+      color: #2c2b28;
+      transition: var(--transition);
+      font-size: 1rem;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    /* Hero section with 3D canvas integration */
+    .hero {
+      background: linear-gradient(120deg, #f7ede5 0%, #fcf5ed 100%);
+      padding: 4rem 0 5rem 0;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid #efe2d6;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .hero h1 {
+      font-size: 3.2rem;
+      font-weight: 700;
+      color: #2c1e12;
+      margin-bottom: 1rem;
+      letter-spacing: -1px;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      max-width: 680px;
+      margin: 0 auto 2rem auto;
+      color: #5a4a3a;
+    }
+
+    .btn {
+      display: inline-block;
+      background-color: var(--primary);
+      color: white;
+      padding: 0.8rem 2rem;
+      border-radius: 40px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition);
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-3px);
+    }
+
+    /* 3D canvas container */
+    #hero-3d-canvas {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.65;
+    }
+
+    /* Responsive: hide 3D element on small screens for better readability */
+    @media (max-width: 768px) {
+      #hero-3d-canvas {
+        opacity: 0.3;
+      }
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+    }
+
+    /* Filter Buttons */
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin: 3rem 0 2.5rem;
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: 1px solid #d6cbbc;
+      padding: 0.6rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--transition);
+      color: #4a3a2c;
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    /* Gallery Grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .art-card {
+      background: white;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.25s ease, box-shadow 0.3s;
+      cursor: pointer;
+    }
+
+    .art-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.15);
+    }
+
+    .art-img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .art-card:hover .art-img {
+      transform: scale(1.02);
+    }
+
+    .card-info {
+      padding: 1.2rem 1.2rem 1.5rem;
+    }
+
+    .card-info h3 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .artist {
+      color: var(--primary);
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .category-badge {
+      display: inline-block;
+      background: #f0e7de;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 0.5rem;
+      color: #5c3e2b;
+    }
+
+    /* About & Contact sections */
+    .section {
+      padding: 5rem 0;
+      border-top: 1px solid #e9dfd5;
+    }
+
+    .section-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .section-title:after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 70px;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 3px;
+    }
+
+    .about-content {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    .about-text {
+      flex: 2;
+    }
+
+    .about-text p {
+      margin-bottom: 1.2rem;
+      color: #3a2e24;
+      line-height: 1.6;
+    }
+
+    .about-stats {
+      flex: 1;
+      background: #f9f0e8;
+      padding: 2rem;
+      border-radius: 32px;
+    }
+
+    .stat {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    /* Contact Form */
+    .contact-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3rem;
+      margin-top: 2rem;
+    }
+
+    .contact-info {
+      flex: 1;
+    }
+
+    .contact-detail {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .contact-detail i {
+      font-size: 1.5rem;
+      color: var(--primary);
+      width: 40px;
+    }
+
+    .contact-form {
+      flex: 1.5;
+      background: white;
+      padding: 2rem;
+      border-radius: 28px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      border: 1px solid #e0d6cc;
+      border-radius: 20px;
+      font-family: inherit;
+      background: #fffcf9;
+      transition: 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(180, 95, 43, 0.1);
+    }
+
+    /* Lightbox Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .modal-content {
+      max-width: 85vw;
+      max-height: 85vh;
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px black;
+    }
+
+    .modal-caption {
+      position: absolute;
+      bottom: 30px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: white;
+      font-size: 1.2rem;
+      background: rgba(0,0,0,0.6);
+      padding: 0.8rem;
+      width: fit-content;
+      margin: 0 auto;
+      border-radius: 60px;
+      backdrop-filter: blur(8px);
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 25px;
+      right: 35px;
+      color: white;
+      font-size: 2.5rem;
+      font-weight: bold;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    footer {
+      background: #1e1a15;
+      color: #ccc6c0;
+      text-align: center;
+      padding: 2rem 0;
+      margin-top: 2rem;
+    }
+
+    /* responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 1.5rem;
+      }
+      .nav-links {
+        gap: 1.2rem;
+      }
+      .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="logo">ART<span>VISTA</span></div>
+        <ul class="nav-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero section with 3D canvas -->
+    <section id="home" class="hero">
+      <div id="hero-3d-canvas"></div>
+      <div class="container">
+        <div class="hero-content">
+          <h1>Where art meets soul</h1>
+          <p>Experience a curated collection of contemporary masterpieces, timeless sculptures, and bold expressions from visionary artists.</p>
+          <a href="#gallery" class="btn">Explore Gallery <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gallery Section with filters -->
+    <section id="gallery" class="container" style="padding-top: 3rem;">
+      <h2 class="section-title">Art Collection</h2>
+      <div class="filter-bar" id="filterBar">
+        <button class="filter-btn active" data-filter="all">All Works</button>
+        <button class="filter-btn" data-filter="painting">Paintings</button>
+        <button class="filter-btn" data-filter="sculpture">Sculptures</button>
+        <button class="filter-btn" data-filter="digital">Digital Art</button>
+        <button class="filter-btn" data-filter="photography">Photography</button>
+      </div>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section">
+      <div class="container">
+        <h2 class="section-title">About the Gallery</h2>
+        <div class="about-content">
+          <div class="about-text">
+            <p>Founded in 2018, ArtVista is a contemporary art space dedicated to showcasing emerging and mid-career artists from around the globe. Our mission is to bridge the gap between creators and collectors, fostering a deeper appreciation for visual storytelling.</p>
+            <p>With three exhibition halls and a rotating calendar of avant-garde installations, we invite you to discover works that challenge, inspire, and transform. Our permanent collection includes over 200 pieces spanning painting, sculpture, photography, and new media.</p>
+            <p><i class="fas fa-map-marker-alt" style="color: #b45f2b;"></i> Located in the heart of the Arts District — open Tuesday to Sunday.</p>
+          </div>
+          <div class="about-stats">
+            <div class="stat">
+              <div class="stat-number">200+</div>
+              <div>Artworks</div>
+            </div>
+            <div class="stat">
+              <div class="stat-number">45+</div>
+              <div>Artists</div>
+            </div>
+            <div class="stat">
+              <div class="stat-number">12k+</div>
+              <div>Visitors / year</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section">
+      <div class="container">
+        <h2 class="section-title">Visit & Connect</h2>
+        <div class="contact-wrapper">
+          <div class="contact-info">
+            <div class="contact-detail">
+              <i class="fas fa-map-pin"></i>
+              <span>47 Rue de l'Art, 75003 Paris, France</span>
+            </div>
+            <div class="contact-detail">
+              <i class="fas fa-envelope"></i>
+              <span>hello@artvista.gallery</span>
+            </div>
+            <div class="contact-detail">
+              <i class="fas fa-phone-alt"></i>
+              <span>+33 (0)1 45 89 23 11</span>
+            </div>
+            <div class="contact-detail">
+              <i class="fab fa-instagram"></i>
+              <span>@artvista_gallery</span>
+            </div>
+            <div style="margin-top: 1.5rem;">
+              <p><strong>Opening Hours:</strong><br>Tue - Fri: 11am – 7pm<br>Sat - Sun: 10am – 6pm<br>Closed Mondays</p>
+            </div>
+          </div>
+          <div class="contact-form">
+            <h3 style="margin-bottom: 1.2rem;">Send a message</h3>
+            <form id="contactForm">
+              <div class="form-group">
+                <input type="text" placeholder="Your name" required>
+              </div>
+              <div class="form-group">
+                <input type="email" placeholder="Email address" required>
+              </div>
+              <div class="form-group">
+                <textarea rows="3" placeholder="Tell us about your interest or inquiry..."></textarea>
+              </div>
+              <button type="submit" class="btn" style="width: 100%;">Submit <i class="fas fa-paper-plane"></i></button>
+              <p style="font-size: 0.75rem; margin-top: 0.8rem; color: #7c6b5a;">We’ll get back to you within 48h.</p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© 2025 ArtVista Gallery — Where creativity finds home.</p>
+      <div style="margin-top: 0.8rem;">
+        <i class="fab fa-twitter" style="margin: 0 0.5rem; cursor: pointer;"></i>
+        <i class="fab fa-instagram" style="margin: 0 0.5rem; cursor: pointer;"></i>
+        <i class="fab fa-facebook-f" style="margin: 0 0.5rem; cursor: pointer;"></i>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lightbox Modal -->
+  <div id="lightboxModal" class="modal">
+    <span class="close-modal">&times;</span>
+    <img class="modal-content" id="modalImage">
+    <div id="modalCaption" class="modal-caption"></div>
+  </div>
+
+  <!-- Three.js library -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    // --- 3D setup for hero background ---
+    const container = document.getElementById('hero-3d-canvas');
+    const scene = new THREE.Scene();
+    scene.background = null; // transparent
+    
+    // Camera: perspective camera, adjusted for nice framing
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+    camera.position.set(0, 1.5, 5);
+    camera.lookAt(0, 0, 0);
+    
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0); // fully transparent background
+    container.appendChild(renderer.domElement);
+    
+    // --- Create a mesmerizing abstract 3D sculpture: TorusKnot with metallic material + floating particles ---
+    const group = new THREE.Group();
+    
+    // Main sculpture: intricate torus knot
+    const geometry = new THREE.TorusKnotGeometry(0.9, 0.28, 200, 32, 3, 4);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xb45f2b,
+      emissive: 0x331a0a,
+      roughness: 0.3,
+      metalness: 0.85,
+      emissiveIntensity: 0.4
+    });
+    const knot = new THREE.Mesh(geometry, material);
+    group.add(knot);
+    
+    // Add a surrounding wireframe ring for elegance
+    const wireframeGeo = new THREE.TorusGeometry(1.15, 0.05, 64, 200);
+    const wireframeMat = new THREE.MeshStandardMaterial({ color: 0xd98a3c, emissive: 0x552a0a, emissiveIntensity: 0.3, wireframe: false });
+    const ring = new THREE.Mesh(wireframeGeo, wireframeMat);
+    group.add(ring);
+    
+    // Floating orbs / particles around
+    const particleCount = 400;
+    const particleGeometry = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      // random positions within a sphere radius 2.2
+      const radius = 1.8 + Math.random() * 0.8;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      particlePositions[i*3] = radius * Math.sin(phi) * Math.cos(theta);
+      particlePositions[i*3+1] = radius * Math.sin(phi) * Math.sin(theta);
+      particlePositions[i*3+2] = radius * Math.cos(phi);
+    }
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    const particleMaterial = new THREE.PointsMaterial({
+      color: 0xe0a878,
+      size: 0.035,
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending
+    });
+    const particles = new THREE.Points(particleGeometry, particleMaterial);
+    group.add(particles);
+    
+    // subtle inner glow with a smaller knot
+    const innerGeo = new THREE.TorusKnotGeometry(0.55, 0.12, 160, 24, 2, 3);
+    const innerMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xcb6e2e, emissiveIntensity: 0.5, metalness: 0.7 });
+    const innerKnot = new THREE.Mesh(innerGeo, innerMat);
+    group.add(innerKnot);
+    
+    scene.add(group);
+    
+    // Lighting: warm ambient and directional lights to enhance bronze/gold feel
+    const ambientLight = new THREE.AmbientLight(0x2c241e, 0.55);
+    scene.add(ambientLight);
+    
+    const mainLight = new THREE.DirectionalLight(0xffdd99, 1.2);
+    mainLight.position.set(2, 3, 4);
+    scene.add(mainLight);
+    
+    const fillLight = new THREE.PointLight(0xb57c48, 0.6);
+    fillLight.position.set(-2, 1, 3);
+    scene.add(fillLight);
+    
+    const backLight = new THREE.PointLight(0x8b5a2b, 0.5);
+    backLight.position.set(0, 1, -3);
+    scene.add(backLight);
+    
+    // subtle rim light
+    const rimLight = new THREE.PointLight(0xcc8844, 0.7);
+    rimLight.position.set(1.5, 1.2, -2);
+    scene.add(rimLight);
+    
+    // small floating dust particles (extra charm)
+    const dustCount = 800;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPositions = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount; i++) {
+      dustPositions[i*3] = (Math.random() - 0.5) * 7;
+      dustPositions[i*3+1] = (Math.random() - 0.5) * 5;
+      dustPositions[i*3+2] = (Math.random() - 0.5) * 6 - 2;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+    const dustMat = new THREE.PointsMaterial({ color: 0xc4a27a, size: 0.02, transparent: true, opacity: 0.35 });
+    const dustField = new THREE.Points(dustGeo, dustMat);
+    scene.add(dustField);
+    
+    // animation variables
+    let time = 0;
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.008;
+      
+      // rotate main group smoothly
+      group.rotation.y = time * 0.5;
+      group.rotation.x = Math.sin(time * 0.3) * 0.2;
+      group.rotation.z = Math.cos(time * 0.2) * 0.1;
+      
+      // make inner knot rotate slightly opposite for dynamic effect
+      innerKnot.rotation.x = time * 0.7;
+      innerKnot.rotation.y = time * 0.4;
+      
+      // rotate ring independently
+      ring.rotation.z = time * 0.3;
+      ring.rotation.x = Math.sin(time * 0.5) * 0.2;
+      
+      // particles rotation
+      particles.rotation.y = time * 0.1;
+      
+      // dust field slow drift
+      dustField.rotation.y = time * 0.02;
+      dustField.rotation.x = Math.sin(time * 0.1) * 0.05;
+      
+      // subtle camera movement for immersion (very slow)
+      camera.position.x = Math.sin(time * 0.2) * 0.08;
+      camera.position.y = 1.5 + Math.sin(time * 0.5) * 0.05;
+      camera.lookAt(0, 0.2, 0);
+      
+      renderer.render(scene, camera);
+    }
+    
+    animate();
+    
+    // resize handler
+    function handleResize() {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+    
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    
+    // small fade-in effect for canvas
+    renderer.domElement.style.opacity = '0';
+    setTimeout(() => {
+      renderer.domElement.style.transition = 'opacity 2s ease';
+      renderer.domElement.style.opacity = '1';
+    }, 100);
+  </script>
+
+  <script type="module">
+    // --- Gallery data and lightbox logic (non-3D, but integrated) ---
+    const artworks = [
+      { id: 1, title: "Echoes of Solitude", artist: "Clara Monet", category: "painting", image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=800&fit=crop", description: "Oil on canvas, 2023" },
+      { id: 2, title: "Bronze Whispers", artist: "Alonzo Neri", category: "sculpture", image: "https://images.unsplash.com/photo-1544967082-d9d25d867d43?w=600&h=800&fit=crop", description: "Bronze & patina" },
+      { id: 3, title: "Neon Reverie", artist: "Yuna Chen", category: "digital", image: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=600&h=800&fit=crop", description: "Digital print on archival paper" },
+      { id: 4, title: "Urban Geometry", artist: "Marcus K.", category: "photography", image: "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=600&h=800&fit=crop", description: "Archival pigment print" },
+      { id: 5, title: "Garden of Memory", artist: "Lena Vasquez", category: "painting", image: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=600&h=800&fit=crop", description: "Acrylic & mixed media" },
+      { id: 6, title: "Marble Horizon", artist: "David Zhou", category: "sculpture", image: "https://images.unsplash.com/photo-1564661613763-7b6e53e6306b?w=600&h=800&fit=crop", description: "Carrara marble" },
+      { id: 7, title: "Virtual Bloom", artist: "Sofia Reyes", category: "digital", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&h=800&fit=crop", description: "Generative NFT series" },
+      { id: 8, title: "Silent Streets", artist: "Henri Dubois", category: "photography", image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=800&fit=crop", description: "Silver gelatin print" },
+      { id: 9, title: "The Dream Weaver", artist: "Anjali Kapoor", category: "painting", image: "https://images.unsplash.com/photo-1579783901586-d88db74b4fe4?w=600&h=800&fit=crop", description: "Watercolor & ink" },
+      { id: 10, title: "Continuum", artist: "Isak Nordin", category: "sculpture", image: "https://images.unsplash.com/photo-1571171638855-4b1b44ee2d45?w=600&h=800&fit=crop", description: "Reclaimed steel" },
+      { id: 11, title: "Pixel Flesh", artist: "Maya Lin", category: "digital", image: "https://images.unsplash.com/photo-1563089145-599997674d42?w=600&h=800&fit=crop", description: "AI-generated composition" },
+      { id: 12, title: "Afternoon Light", artist: "Elena Greco", category: "photography", image: "https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?w=600&h=800&fit=crop", description: "Cyanotype print" }
+    ];
+
+    const galleryGrid = document.getElementById('galleryGrid');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    let currentFilter = 'all';
+
+    function renderGallery() {
+      const filtered = currentFilter === 'all' ? artworks : artworks.filter(art => art.category === currentFilter);
+      if (filtered.length === 0) {
+        galleryGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem;">No artworks in this category. Explore other collections ✨</div>`;
+        return;
+      }
+      
+      galleryGrid.innerHTML = filtered.map(art => `
+        <div class="art-card" data-id="${art.id}" data-category="${art.category}">
+          <img class="art-img" src="${art.image}" alt="${art.title}" loading="lazy">
+          <div class="card-info">
+            <h3>${art.title}</h3>
+            <div class="artist"><i class="fas fa-palette"></i> ${art.artist}</div>
+            <span class="category-badge">${art.category}</span>
+            <p style="font-size:0.8rem; margin-top: 0.6rem; color:#7f6e5d;">${art.description}</p>
+          </div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.art-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const id = parseInt(card.getAttribute('data-id'));
+          const artwork = artworks.find(a => a.id === id);
+          if (artwork) openLightbox(artwork);
+        });
+      });
+    }
+
+    // Lightbox
+    const modal = document.getElementById('lightboxModal');
+    const modalImg = document.getElementById('modalImage');
+    const modalCaption = document.getElementById('modalCaption');
+    const closeModalSpan = document.querySelector('.close-modal');
+
+    function openLightbox(artwork) {
+      modal.style.display = 'flex';
+      modalImg.src = artwork.image;
+      modalCaption.innerHTML = `${artwork.title} — ${artwork.artist} | ${artwork.category} | ${artwork.description}`;
+    }
+    function closeLightbox() { modal.style.display = 'none'; }
+    closeModalSpan.addEventListener('click', closeLightbox);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeLightbox(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display === 'flex') closeLightbox(); });
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.getAttribute('data-filter');
+        renderGallery();
+      });
+    });
+
+    const contactForm = document.getElementById('contactForm');
+    contactForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert("✨ Thank you for reaching out! ArtVista will respond soon.");
+      contactForm.reset();
+    });
+
+    document.querySelectorAll('.nav-links a, .btn[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const targetId = this.getAttribute('href');
+        if (targetId && targetId !== '#') {
+          e.preventDefault();
+          const targetElement = document.querySelector(targetId);
+          if (targetElement) targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    renderGallery();
+  </script>
+</body>
+</html>

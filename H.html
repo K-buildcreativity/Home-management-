@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>HomePulse | Smart Home Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root {
+      --bg: #eef3fb;
+      --bg-soft: rgba(255, 255, 255, 0.76);
+      --surface: rgba(255, 255, 255, 0.88);
+      --surface-strong: #ffffff;
+      --text: #0f172a;
+      --muted: #5f6c83;
+      --border: rgba(148, 163, 184, 0.22);
+      --primary: #2563eb;
+      --primary-2: #7c3aed;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "DM Sans", sans-serif;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 32%),
+        radial-gradient(circle at 90% 10%, rgba(124, 58, 237, 0.12), transparent 26%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.85), transparent 80%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(18px);
+      background: rgba(248, 250, 252, 0.76);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.25);
+    }
+
+    .brand-name {
+      font-size: 1.18rem;
+    }
+
+    .brand-sub {
+      display: block;
+      font-size: 0.75rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2px;
+      font-weight: 700;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 22px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border-radius: 999px;
+      padding: 14px 20px;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+      color: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), #1d4ed8);
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.28);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .hero,
+    .section {
+      padding: 88px 0;
+    }
+
+    .hero {
+      padding: 84px 0 58px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      gap: 36px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.08);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.03em;
+    }
+
+    .hero h1 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(3rem, 6vw, 5.6rem);
+      line-height: 0.95;
+      letter-spacing: -0.07em;
+      margin: 22px 0 20px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.12rem;
+      line-height: 1.75;
+      color: var(--muted);
+      max-width: 58ch;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .meta-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .preview-card,
+    .feature-card,
+    .room-card,
+    .step-card,
+    .quote-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .preview-card {
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -20% -25% auto;
+      width: 210px;
+      height: 210px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.18), transparent 68%);
+      pointer-events: none;
+    }
+
+    .preview-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.1);
+      color: #067647;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .mini-stat {
+      padding: 18px;
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+
+    .mini-stat strong {
+      display: block;
+      font-size: 1.8rem;
+      font-family: "Space Grotesk", sans-serif;
+      letter-spacing: -0.04em;
+    }
+
+    .mini-stat span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .device-stack {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .device-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(248, 250, 252, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .badge.primary {
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--primary);
+    }
+
+    .badge.success {
+      background: rgba(16, 185, 129, 0.12);
+      color: #059669;
+    }
+
+    .badge.warning {
+      background: rgba(245, 158, 11, 0.14);
+      color: #b45309;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .section-head h2 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      letter-spacing: -0.05em;
+    }
+
+    .section-head p {
+      color: var(--muted);
+      max-width: 56ch;
+      line-height: 1.7;
+      margin-top: 8px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .feature-card {
+      padding: 24px;
+      min-height: 100%;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 16px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    }
+
+    .feature-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .layout-2 {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 22px;
+    }
+
+    .room-card {
+      padding: 22px;
+    }
+
+    .room-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .room-metrics {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 14px 0;
+    }
+
+    .room-metrics .badge {
+      background: rgba(15, 23, 42, 0.04);
+      color: var(--text);
+    }
+
+    .timeline {
+      display: grid;
+      gap: 14px;
+    }
+
+    .step-card {
+      padding: 20px 22px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .step-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.12);
+      margin-top: 8px;
+      flex: 0 0 auto;
+    }
+
+    .step-card h4 {
+      margin-bottom: 6px;
+    }
+
+    .step-card p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .quote-card {
+      padding: 32px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(239, 246, 255, 0.88));
+    }
+
+    .quote-card p {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(1.4rem, 2.5vw, 2.3rem);
+      line-height: 1.25;
+      letter-spacing: -0.04em;
+    }
+
+    .footer {
+      padding: 26px 0 48px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .layout-2,
+      .grid-4 {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .section-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        display: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav-inner {
+        flex-wrap: wrap;
+      }
+
+      .hero-grid,
+      .layout-2,
+      .grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 58px;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.5rem, 11vw, 4rem);
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .nav-cta {
+        width: 100%;
+      }
+
+      .nav-cta .btn {
+        flex: 1;
+      }
+
+      .preview-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="navbar">
+      <div class="container nav-inner">
+        <div class="brand">
+          <div class="brand-mark"><i class="fas fa-house"></i></div>
+          <div>
+            <div class="brand-name">HomePulse</div>
+            <span class="brand-sub">smart home management</span>
+          </div>
+        </div>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="#features">Features</a>
+          <a href="#rooms">Rooms</a>
+          <a href="#automation">Automation</a>
+          <a href="#preview">Live Preview</a>
+        </nav>
+        <div class="nav-cta">
+          <a class="btn btn-ghost" href="#features"><i class="fas fa-compass"></i> Explore</a>
+          <a class="btn btn-primary" href="k.html#dashboard"><i class="fas fa-arrow-right"></i> Open Control Center</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="reveal">
+            <div class="eyebrow"><i class="fas fa-sparkles"></i> One dashboard for comfort, safety, and energy</div>
+            <h1>Manage every room from one calm <span>HomePulse</span> view.</h1>
+            <p>See lights, locks, climate, cameras, and routines at a glance. HomePulse turns scattered device controls into a clear daily command center for the entire household.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="k.html#dashboard"><i class="fas fa-play"></i> Launch dashboard</a>
+              <a class="btn btn-secondary" href="#rooms"><i class="fas fa-house-chimney"></i> View room snapshots</a>
+              <a class="btn btn-ghost" id="resumeLink" href="k.html#dashboard"><i class="fas fa-clock"></i> Resume last session</a>
+            </div>
+            <p style="margin-top:14px;color:var(--muted);font-size:0.95rem;">
+              Last session:
+              <strong id="lastSessionMode" style="color:var(--text)">Home</strong>
+              <span id="lastSessionPage">Dashboard</span>
+            </p>
+            <div class="hero-meta">
+              <div class="meta-pill">
+                <i class="fas fa-bolt" style="color:var(--warning)"></i>
+                <div>
+                  <strong id="energyCounter">18.4 kWh</strong>
+                  <div style="color:var(--muted);font-size:.88rem">Today using 14% less</div>
+                </div>
+              </div>
+              <div class="meta-pill">
+                <i class="fas fa-shield-halved" style="color:var(--success)"></i>
+                <div>
+                  <strong id="securityCounter">All secure</strong>
+                  <div style="color:var(--muted);font-size:.88rem">3 locks armed, 0 alerts</div>
+                </div>
+              </div>
+              <div class="meta-pill">
+                <i class="fas fa-clock" style="color:var(--primary)"></i>
+                <div>
+                  <strong id="timeCounter">Live now</strong>
+                  <div style="color:var(--muted);font-size:.88rem">Auto routines updated</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="preview" class="preview-card reveal">
+            <div class="preview-head">
+              <div>
+                <div class="badge primary">House status</div>
+                <h2 style="margin-top:10px;font-size:1.75rem;font-family:'Space Grotesk',sans-serif;letter-spacing:-.04em">Connected and in control</h2>
+              </div>
+              <div class="status-chip"><i class="fas fa-circle" style="font-size:.55rem"></i> Live sync</div>
+            </div>
+            <div class="preview-grid">
+              <div class="mini-stat">
+                <strong data-count="24">0</strong>
+                <span>Devices online</span>
+              </div>
+              <div class="mini-stat">
+                <strong data-count="7">0</strong>
+                <span>Automations ready</span>
+              </div>
+              <div class="mini-stat">
+                <strong data-count="5">0</strong>
+                <span>Rooms mapped</span>
+              </div>
+              <div class="mini-stat">
+                <strong data-count="98">0</strong>
+                <span>Home health score</span>
+              </div>
+            </div>
+            <div class="device-stack">
+              <div class="device-row">
+                <div>
+                  <strong>Living room</strong>
+                  <div style="color:var(--muted);font-size:.92rem">Lights at 65%, thermostat 21C</div>
+                </div>
+                <span class="badge success">Comfort mode</span>
+              </div>
+              <div class="device-row">
+                <div>
+                  <strong>Front entry</strong>
+                  <div style="color:var(--muted);font-size:.92rem">Door locked, camera recording</div>
+                </div>
+                <span class="badge primary">Secure</span>
+              </div>
+              <div class="device-row">
+                <div>
+                  <strong>Energy saver</strong>
+                  <div style="color:var(--muted);font-size:.92rem">Peak load trimmed automatically</div>
+                </div>
+                <span class="badge warning">Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <div class="container">
+          <div class="section-head reveal">
+            <div>
+              <h2>Built for the way homes actually run.</h2>
+              <p>Track what matters, automate the repetitive pieces, and keep the whole house comfortable without digging through menus.</p>
+            </div>
+            <a class="btn btn-secondary" href="k.html"><i class="fas fa-layer-group"></i> Jump to dashboard</a>
+          </div>
+          <div class="grid-4">
+            <article class="feature-card reveal">
+              <div class="feature-icon"><i class="fas fa-house"></i></div>
+              <h3>Room snapshots</h3>
+              <p>Understand each room at a glance with live comfort, device, and security indicators that are easy to scan on any screen.</p>
+            </article>
+            <article class="feature-card reveal">
+              <div class="feature-icon"><i class="fas fa-robot"></i></div>
+              <h3>Automation rules</h3>
+              <p>Use time and motion triggers to handle morning routines, bedtime scenes, and energy-saving actions automatically.</p>
+            </article>
+            <article class="feature-card reveal">
+              <div class="feature-icon"><i class="fas fa-battery-three-quarters"></i></div>
+              <h3>Energy insight</h3>
+              <p>See usage trends, peak hours, and savings opportunities before small inefficiencies become expensive habits.</p>
+            </article>
+            <article class="feature-card reveal">
+              <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
+              <h3>Security center</h3>
+              <p>Keep doors, cameras, and sensors visible in one place so the home stays secure even when you are away.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="rooms" class="section">
+        <div class="container">
+          <div class="section-head reveal">
+            <div>
+              <h2>Room-by-room control.</h2>
+              <p>Move from one space to the next without losing context. Each card summarizes the devices, climate, and routine status for that room.</p>
+            </div>
+          </div>
+          <div class="layout-2">
+            <article class="room-card reveal">
+              <div class="badge primary">Living areas</div>
+              <h3>Living Room</h3>
+              <p style="color:var(--muted);line-height:1.7">Warm lighting, comfortable temperature, and the media scene ready for the evening.</p>
+              <div class="room-metrics">
+                <span class="badge">4 devices</span>
+                <span class="badge">21C climate</span>
+                <span class="badge success">Scene ready</span>
+              </div>
+              <div class="device-row"><strong>Lighting</strong><span class="badge success">65%</span></div>
+              <div class="device-row" style="margin-top:12px;"><strong>Thermostat</strong><span class="badge primary">Auto</span></div>
+            </article>
+            <article class="room-card reveal">
+              <div class="badge warning">Entry and safety</div>
+              <h3>Front Entry</h3>
+              <p style="color:var(--muted);line-height:1.7">Lock status, camera recording, and motion detection stay visible so the house always feels covered.</p>
+              <div class="room-metrics">
+                <span class="badge">1 lock</span>
+                <span class="badge">1 camera</span>
+                <span class="badge success">Armed</span>
+              </div>
+              <div class="device-row"><strong>Lock</strong><span class="badge success">Locked</span></div>
+              <div class="device-row" style="margin-top:12px;"><strong>Camera</strong><span class="badge primary">Recording</span></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="automation" class="section">
+        <div class="container">
+          <div class="section-head reveal">
+            <div>
+              <h2>Automation that keeps up.</h2>
+              <p>From the first coffee to bedtime lockup, the system can quietly handle the small jobs that make a house feel organized.</p>
+            </div>
+          </div>
+          <div class="timeline">
+            <article class="step-card reveal">
+              <div class="step-dot"></div>
+              <div>
+                <h4>07:00 - Morning routine</h4>
+                <p>Open the living area, bring lights to a soft level, and warm the room before everyone starts moving around.</p>
+              </div>
+            </article>
+            <article class="step-card reveal">
+              <div class="step-dot" style="background:var(--success);box-shadow:0 0 0 6px rgba(16,185,129,.12)"></div>
+              <div>
+                <h4>18:30 - Energy saver</h4>
+                <p>Trim idle lights, pause unused outlets, and watch the app highlight the energy drop right away.</p>
+              </div>
+            </article>
+            <article class="step-card reveal">
+              <div class="step-dot" style="background:var(--warning);box-shadow:0 0 0 6px rgba(245,158,11,.12)"></div>
+              <div>
+                <h4>22:30 - Night lockup</h4>
+                <p>Lock the front door, arm the security system, and move the home into a quiet overnight state.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="quote-card reveal">
+            <p>One clear dashboard is enough when every device, room, and routine works together.</p>
+            <div style="margin-top:18px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.82rem">Designed for daily home management</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid rgba(148,163,184,.18);padding-top:24px;">
+        <div><strong style="color:var(--text)">HomePulse</strong> keeps smart home control simple.</div>
+        <div><a href="k.html" style="color:var(--primary);text-decoration:none;font-weight:700">Open the control center</a></div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const counters = document.querySelectorAll("[data-count]");
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        const el = entry.target;
+        const target = Number(el.dataset.count || 0);
+        const suffix = el.dataset.suffix || "";
+        const duration = 1200;
+        const start = performance.now();
+
+        function tick(now) {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = `${Math.round(target * eased)}${suffix}`;
+          if (progress < 1) {
+            requestAnimationFrame(tick);
+          }
+        }
+
+        requestAnimationFrame(tick);
+        counterObserver.unobserve(el);
+      });
+    }, { threshold: 0.4 });
+
+    counters.forEach((counter) => counterObserver.observe(counter));
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("active");
+        }
+      });
+    }, { threshold: 0.18 });
+
+    document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+
+    function updateLiveClock() {
+      const time = new Date();
+      const formatted = time.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      document.getElementById("timeCounter").textContent = formatted;
+    }
+
+    function updateEnergy() {
+      const now = new Date();
+      const base = 17.8 + Math.sin((now.getHours() / 24) * Math.PI * 2) * 1.2;
+      document.getElementById("energyCounter").textContent = `${base.toFixed(1)} kWh`;
+    }
+
+    updateLiveClock();
+    updateEnergy();
+    setInterval(updateLiveClock, 30000);
+    setInterval(updateEnergy, 60000);
+
+    function syncSessionInfo() {
+      let lastPage = "dashboard";
+      let lastMode = "Home";
+      try {
+        lastPage = localStorage.getItem("sm_currentPage") || "dashboard";
+        lastMode = localStorage.getItem("sm_homeMode") || "Home";
+      } catch (error) {
+        // Ignore storage access issues in restricted environments.
+      }
+
+      const labels = {
+        dashboard: "Dashboard",
+        rooms: "Rooms",
+        devices: "Devices",
+        automations: "Automations",
+        scenes: "Scenes",
+        energy: "Energy",
+        security: "Security"
+      };
+
+      const resumeLink = document.getElementById("resumeLink");
+      const modeLabel = document.getElementById("lastSessionMode");
+      const pageLabel = document.getElementById("lastSessionPage");
+
+      if (resumeLink) {
+        resumeLink.href = `k.html#${labels[lastPage] ? lastPage : "dashboard"}`;
+      }
+      if (modeLabel) {
+        modeLabel.textContent = lastMode;
+      }
+      if (pageLabel) {
+        pageLabel.textContent = ` - ${labels[lastPage] || "Dashboard"}`;
+      }
+    }
+
+    syncSessionInfo();
+  </script>
+</body>
+</html>

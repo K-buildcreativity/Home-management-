@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SmartHome | Industry Grade Management System</title>
+    <!-- Tailwind CSS + Font Awesome + Chart.js -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 32%),
+                radial-gradient(circle at 90% 10%, rgba(124, 58, 237, 0.12), transparent 26%),
+                linear-gradient(180deg, #f8fbff 0%, #eef3fb 100%) !important;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+            background-size: 56px 56px;
+            mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.8), transparent 82%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #app {
+            position: relative;
+            z-index: 1;
+        }
+
+        #sidebar,
+        header {
+            background: rgba(255, 255, 255, 0.82) !important;
+            backdrop-filter: blur(18px);
+        }
+
+        .bg-white {
+            background: rgba(255, 255, 255, 0.86) !important;
+        }
+
+        html.dark body {
+            background:
+                radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 32%),
+                radial-gradient(circle at 90% 10%, rgba(124, 58, 237, 0.14), transparent 24%),
+                linear-gradient(180deg, #0f172a 0%, #111827 100%) !important;
+            color: #e5eef9;
+        }
+
+        html.dark #sidebar,
+        html.dark header,
+        html.dark .bg-white {
+            background: rgba(15, 23, 42, 0.84) !important;
+            color: #e5eef9;
+        }
+
+        html.dark .text-gray-500,
+        html.dark .text-gray-600,
+        html.dark .text-slate-500,
+        html.dark .text-slate-600 {
+            color: #94a3b8 !important;
+        }
+
+        html.dark .border-gray-200,
+        html.dark .border-slate-200 {
+            border-color: rgba(148, 163, 184, 0.18) !important;
+        }
+
+        .shadow {
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06) !important;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 24px 50px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .transition-smooth {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(124, 58, 237, 0.08));
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 1.75rem;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.06);
+        }
+
+        .section-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.08);
+            color: #2563eb;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.8);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased">
+
+    <!-- Main App Container -->
+    <div id="app" class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-microchip text-blue-500 text-2xl"></i>
+                    <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">SmartHome</span>
+                </div>
+                <button id="closeSidebarBtn" class="lg:hidden text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <nav class="flex-1 p-4 space-y-1.5">
+                <a href="#dashboard" data-page="dashboard" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-smooth">
+                    <i class="fas fa-tachometer-alt w-5"></i><span>Dashboard</span>
+                </a>
+                <a href="#rooms" data-page="rooms" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-smooth">
+                    <i class="fas fa-house-chimney w-5"></i><span>Rooms</span>
+                </a>
+                <a href="#devices" data-page="devices" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-smooth">
+                    <i class="fas fa-microchip w-5"></i><span>Devices</span>
+                </a>
+                <a href="#automations" data-page="automations" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-smooth">
+                    <i class="fas fa-robot w-5"></i><span>Automations</span>
+                </a>
+                <a href="#scenes" data-page="scenes" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-smooth">
+                    <i class="fas fa-magic w-5"></i><span>Scenes</span>
+                </a>
+                <a href="#energy" data-page="energy" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-smooth">
+                    <i class="fas fa-chart-line w-5"></i><span>Energy Monitor</span>
+                </a>
+                <a href="#security" data-page="security" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-smooth">
+                    <i class="fas fa-shield-halved w-5"></i><span>Security</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">AJ</div>
+                        <div>
+                            <p class="text-sm font-medium">Alex Johnson</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">admin@smarthome.com</p>
+                        </div>
+                    </div>
+                    <button id="darkModeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <i class="fas fa-moon dark:hidden text-gray-600"></i>
+                        <i class="fas fa-sun hidden dark:inline text-yellow-400"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden lg:ml-72">
+            <!-- Top Header -->
+            <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between lg:justify-end">
+                <button id="openSidebarBtn" class="lg:hidden text-gray-600 dark:text-gray-300 text-xl"><i class="fas fa-bars"></i></button>
+                <h1 class="text-xl font-semibold lg:hidden">SmartHome</h1>
+                <div class="flex items-center space-x-3">
+                    <span class="relative">
+                        <i class="fas fa-bell text-gray-500 dark:text-gray-400 text-xl"></i>
+                        <span class="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </span>
+                    <div class="hidden md:block text-right">
+                        <p class="text-sm font-medium">Alex Johnson</p>
+                        <p class="text-xs text-gray-500">Home Manager</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Page Content -->
+            <main id="pageContent" class="flex-1 overflow-y-auto p-6">
+                <!-- Content will be injected here -->
+                <div class="flex justify-center items-center h-full"><i class="fas fa-spinner fa-pulse text-2xl"></i></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for adding automation rule -->
+    <div id="ruleModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden transition-all">
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6 mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Create Automation Rule</h3>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="ruleForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Rule Name</label>
+                    <input type="text" id="ruleName" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Trigger (Time)</label>
+                    <input type="time" id="ruleTime" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Action (Device & State)</label>
+                    <select id="ruleDevice" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"></select>
+                    <select id="ruleActionState" class="mt-2 w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                        <option value="on">Turn On</option>
+                        <option value="off">Turn Off</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition">Create Rule</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ---------- MOCK DATA & STATE ----------
+        let devices = [
+            { id: "1", name: "Living Room Light", type: "light", room: "Living Room", isOnline: true, isOn: true, capabilities: ["onoff", "brightness"], metadata: { brightness: 75 } },
+            { id: "2", name: "Kitchen Light", type: "light", room: "Kitchen", isOnline: true, isOn: false, capabilities: ["onoff", "brightness"], metadata: { brightness: 0 } },
+            { id: "3", name: "Front Door Lock", type: "lock", room: "Entry", isOnline: true, isOn: true, capabilities: ["onoff"], metadata: { locked: true } },
+            { id: "4", name: "Hallway Motion Sensor", type: "sensor", room: "Hallway", isOnline: true, isOn: true, capabilities: ["motion"], metadata: { motionDetected: false } },
+            { id: "5", name: "Living Room Thermostat", type: "thermostat", room: "Living Room", isOnline: true, isOn: true, capabilities: ["temperature"], metadata: { temperature: 22, targetTemperature: 21 } },
+            { id: "6", name: "Bedroom Light", type: "light", room: "Bedroom", isOnline: true, isOn: false, capabilities: ["onoff", "brightness"], metadata: { brightness: 0 } },
+            { id: "7", name: "Patio Camera", type: "camera", room: "Outside", isOnline: true, isOn: true, capabilities: [], metadata: {} },
+            { id: "8", name: "Coffee Maker", type: "outlet", room: "Kitchen", isOnline: true, isOn: false, capabilities: ["onoff"], metadata: {} }
+        ];
+
+        let automationRules = [
+            { id: "r1", name: "Good Morning Lights", enabled: true, condition: { type: "time", value: "07:00" }, action: { deviceId: "1", state: "on" }, triggerCount: 12, lastTriggered: "2025-03-10T07:00:00" },
+            { id: "r2", name: "Motion Detection Hallway", enabled: true, condition: { type: "motion", deviceId: "4", value: true }, action: { deviceId: "2", state: "on" }, triggerCount: 34, lastTriggered: "2025-03-10T14:23:00" }
+        ];
+
+        let scenes = [
+            { id: "s1", name: "Good Morning", icon: "fa-sun", devices: [{ id: "1", state: true, brightness: 85 }, { id: "2", state: true, brightness: 70 }] },
+            { id: "s2", name: "Movie Night", icon: "fa-film", devices: [{ id: "1", state: true, brightness: 30 }, { id: "2", state: false }, { id: "6", state: false }] },
+            { id: "s3", name: "Away Mode", icon: "fa-home", devices: [{ id: "1", state: false }, { id: "2", state: false }, { id: "3", state: true, locked: true }, { id: "6", state: false }] }
+        ];
+
+        let energyReadings = Array.from({ length: 24 }, (_, i) => ({ hour: i, usage: (Math.random() * 2 + 0.5).toFixed(1), cost: (Math.random() * 0.4 + 0.1).toFixed(2) }));
+
+        const pageLabels = {
+            dashboard: "Dashboard",
+            rooms: "Rooms",
+            devices: "Devices",
+            automations: "Automations",
+            scenes: "Scenes",
+            energy: "Energy",
+            security: "Security"
+        };
+        const validPages = new Set(Object.keys(pageLabels));
+
+        function normalizePage(page) {
+            return validPages.has(page) ? page : "dashboard";
+        }
+
+        function getPageLabel(page) {
+            return pageLabels[normalizePage(page)] || pageLabels.dashboard;
+        }
+
+        function iconForDevice(type) {
+            if (type === "light") return "fa-lightbulb";
+            if (type === "thermostat") return "fa-temperature-half";
+            if (type === "lock") return "fa-lock";
+            if (type === "camera") return "fa-video";
+            if (type === "outlet") return "fa-plug";
+            if (type === "sensor") return "fa-wave-square";
+            return "fa-microchip";
+        }
+
+        function iconForRoom(room) {
+            if (room === "Living Room") return "fa-couch";
+            if (room === "Kitchen") return "fa-utensils";
+            if (room === "Bedroom") return "fa-bed";
+            if (room === "Hallway") return "fa-person-walking-arrow-right";
+            if (room === "Entry") return "fa-door-open";
+            if (room === "Outside") return "fa-tree";
+            if (room === "Garage") return "fa-warehouse";
+            return "fa-house";
+        }
+
+        function deviceStateLabel(device) {
+            if (device.type === "thermostat") return `${device.metadata.temperature || device.metadata.targetTemperature || 21}&deg;C`;
+            if (device.type === "camera") return "Live";
+            if (device.type === "sensor") return device.metadata.motionDetected ? "Motion" : "Clear";
+            if (device.type === "lock") return device.metadata.locked ? "Locked" : "Unlocked";
+            return device.isOn ? "On" : "Off";
+        }
+
+        function pageShell(title, description, actions, content) {
+            return `
+                <div class="space-y-6">
+                    <section class="hero-banner p-6 md:p-8">
+                        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                            <div class="max-w-3xl space-y-3">
+                                <span class="section-chip">${title}</span>
+                                <div>
+                                    <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">${title}</h2>
+                                    <p class="mt-3 text-slate-600 leading-7">${description}</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-3">${actions || ""}</div>
+                        </div>
+                    </section>
+                    ${content}
+                </div>
+            `;
+        }
+
+        function roomSummary(room) {
+            const roomDevices = devices.filter(d => d.room === room);
+            const activeDevices = roomDevices.filter(d => d.type !== "lock" && d.isOn);
+            const thermostat = roomDevices.find(d => d.type === "thermostat");
+            const locks = roomDevices.filter(d => d.type === "lock");
+            const cameras = roomDevices.filter(d => d.type === "camera");
+            return {
+                roomDevices,
+                activeDevices,
+                thermostat,
+                locks,
+                cameras,
+                climateLabel: thermostat ? `${thermostat.metadata.temperature || thermostat.metadata.targetTemperature || 21}&deg;C` : "Stable"
+            };
+        }
+
+        function securitySummary() {
+            const locks = devices.filter(d => d.type === "lock");
+            const cameras = devices.filter(d => d.type === "camera");
+            const sensors = devices.filter(d => d.type === "sensor");
+            const openLocks = locks.filter(d => !d.metadata.locked);
+            const activeMotion = sensors.filter(d => d.metadata.motionDetected);
+            const issues = [];
+
+            openLocks.forEach(device => {
+                issues.push({
+                    tone: "rose",
+                    title: `${device.name} is unlocked`,
+                    detail: `${device.room} needs attention before the house is fully armed.`
+                });
+            });
+
+            activeMotion.forEach(device => {
+                issues.push({
+                    tone: "amber",
+                    title: `Motion detected in ${device.room}`,
+                    detail: `${device.name} is reporting movement right now.`
+                });
+            });
+
+            if (!issues.length) {
+                issues.push({
+                    tone: "teal",
+                    title: "All clear",
+                    detail: "No security alerts are active right now."
+                });
+            }
+
+            return {
+                locks,
+                cameras,
+                sensors,
+                openLocks,
+                activeMotion,
+                issues,
+                armed: openLocks.length === 0 && activeMotion.length === 0
+            };
+        }
+
+        // Persist to localStorage
+        function loadData() {
+            try {
+                const storedDevices = localStorage.getItem("sm_devices");
+                const storedRules = localStorage.getItem("sm_rules");
+                const storedScenes = localStorage.getItem("sm_scenes");
+                if (storedDevices) devices = JSON.parse(storedDevices);
+                if (storedRules) automationRules = JSON.parse(storedRules);
+                if (storedScenes) scenes = JSON.parse(storedScenes);
+            } catch (error) {
+                console.warn("Unable to load saved SmartHome data.", error);
+            }
+        }
+        function saveData() {
+            try {
+                localStorage.setItem("sm_devices", JSON.stringify(devices));
+                localStorage.setItem("sm_rules", JSON.stringify(automationRules));
+                localStorage.setItem("sm_scenes", JSON.stringify(scenes));
+                localStorage.setItem("sm_currentPage", currentPage || "dashboard");
+                localStorage.setItem("sm_homeMode", homeMode || "Home");
+            } catch (error) {
+                console.warn("Unable to save SmartHome data.", error);
+            }
+        }
+
+        // Helper: update device and trigger automation engine
+        function updateDevice(deviceId, updates, options = {}) {
+            const index = devices.findIndex(d => d.id === deviceId);
+            if (index !== -1) {
+                devices[index] = { ...devices[index], ...updates, lastSeen: new Date().toISOString() };
+                saveData();
+                if (!options.skipAutomation) {
+                    evaluateAutomations(deviceId);
+                }
+                renderCurrentPage();
+            }
+        }
+
+        // Simple automation engine (time & motion)
+        function evaluateAutomations(changedDeviceId) {
+            const now = new Date();
+            const currentTime = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+            const minuteKey = `${now.toISOString().slice(0, 10)}-${currentTime}`;
+            let hasChanges = false;
+            automationRules.forEach(rule => {
+                if (!rule.enabled) return;
+                let triggered = false;
+                if (rule.condition.type === "time" && rule.condition.value === currentTime) {
+                    if (rule.lastTriggeredMinute !== minuteKey) triggered = true;
+                } else if (rule.condition.type === "motion" && changedDeviceId === rule.condition.deviceId) {
+                    const motionDevice = devices.find(d => d.id === rule.condition.deviceId);
+                    if (motionDevice && motionDevice.metadata.motionDetected === rule.condition.value) triggered = true;
+                }
+                if (triggered) {
+                    const targetDevice = devices.find(d => d.id === rule.action.deviceId);
+                    if (targetDevice) {
+                        targetDevice.isOn = rule.action.state === "on";
+                        targetDevice.lastSeen = new Date().toISOString();
+                        hasChanges = true;
+                    }
+                    rule.triggerCount++;
+                    rule.lastTriggered = new Date().toISOString();
+                    rule.lastTriggeredMinute = minuteKey;
+                    hasChanges = true;
+                }
+            });
+            if (hasChanges) saveData();
+        }
+
+        // Simulate motion & energy every 8 seconds
+        function startSimulation() {
+            setInterval(() => {
+                const motionSensor = devices.find(d => d.type === "sensor");
+                if (motionSensor) {
+                    const newMotion = Math.random() < 0.3;
+                    if (motionSensor.metadata.motionDetected !== newMotion) {
+                        updateDevice(motionSensor.id, { metadata: { ...motionSensor.metadata, motionDetected: newMotion } });
+                    }
+                }
+                // update energy reading
+                const newUsage = (Math.random() * 2.5 + 0.5).toFixed(1);
+                const newCost = (newUsage * 0.2).toFixed(2);
+                energyReadings.push({ hour: new Date().getHours(), usage: newUsage, cost: newCost });
+                if (energyReadings.length > 24) energyReadings.shift();
+                if (currentPage === "energy") renderEnergyPage();
+                else if (currentPage === "dashboard") renderDashboard();
+            }, 8000);
+        }
+
+        // ---------- RENDER PAGES ----------
+        let currentChart = null;
+        function renderDashboard() {
+            const onlineCount = devices.filter(d => d.isOnline).length;
+            const activeCount = devices.filter(d => d.type !== "lock" && d.isOn).length;
+            const activeRules = automationRules.filter(r => r.enabled).length;
+            const totalEnergy = energyReadings.reduce((sum, r) => sum + parseFloat(r.usage), 0).toFixed(1);
+            const recentDevices = devices.slice(0, 4);
+            const roomList = [...new Set(devices.map(d => d.room))].slice(0, 4);
+            const html = `
+                <div class="space-y-6">
+                    <section class="hero-banner p-6 md:p-8">
+                        <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] items-center">
+                            <div class="space-y-4">
+                                <span class="section-chip">HomePulse control center</span>
+                                <div>
+                                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900">One calm dashboard for the whole house.</h2>
+                                    <p class="mt-4 text-slate-600 max-w-2xl leading-7">See the current state of your home, move quickly between rooms, and keep an eye on energy, routines, and security without jumping between different apps.</p>
+                                </div>
+                                <div class="flex flex-wrap gap-3">
+                                    <button onclick="window.applyMode && window.applyMode('Away')" class="px-5 py-3 rounded-full bg-slate-900 text-white font-semibold shadow hover:-translate-y-0.5">Away mode</button>
+                                    <button onclick="window.goToPage && window.goToPage('rooms')" class="px-5 py-3 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Open rooms</button>
+                                    <button onclick="window.goToPage && window.goToPage('security')" class="px-5 py-3 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Security center</button>
+                                    <button onclick="window.goToPage && window.goToPage('automations')" class="px-5 py-3 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Automation center</button>
+                                </div>
+                            </div>
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <div class="bg-white/80 border border-slate-200 rounded-2xl p-4 shadow-sm">
+                                    <p class="text-sm text-slate-500">Home mode</p>
+                                    <p class="mt-2 text-2xl font-bold">${window.homeMode || 'Home'}</p>
+                                </div>
+                                <div class="bg-white/80 border border-slate-200 rounded-2xl p-4 shadow-sm">
+                                    <p class="text-sm text-slate-500">Active rules</p>
+                                    <p class="mt-2 text-2xl font-bold text-violet-600">${activeRules}</p>
+                                </div>
+                                <div class="bg-white/80 border border-slate-200 rounded-2xl p-4 shadow-sm">
+                                    <p class="text-sm text-slate-500">Energy today</p>
+                                    <p class="mt-2 text-2xl font-bold">${totalEnergy} kWh</p>
+                                </div>
+                                <div class="bg-white/80 border border-slate-200 rounded-2xl p-4 shadow-sm">
+                                    <p class="text-sm text-slate-500">Online devices</p>
+                                    <p class="mt-2 text-2xl font-bold">${onlineCount}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white/85 border border-slate-200 p-6 rounded-2xl shadow card-hover">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-slate-500 font-medium">Online devices</p>
+                                    <p class="text-3xl font-bold mt-2">${onlineCount}</p>
+                                </div>
+                                <i class="fas fa-wifi text-emerald-500 text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-6 rounded-2xl shadow card-hover">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-slate-500 font-medium">Active devices</p>
+                                    <p class="text-3xl font-bold mt-2">${activeCount}</p>
+                                </div>
+                                <i class="fas fa-circle-play text-sky-500 text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-6 rounded-2xl shadow card-hover">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-slate-500 font-medium">Automations</p>
+                                    <p class="text-3xl font-bold mt-2">${activeRules}</p>
+                                </div>
+                                <i class="fas fa-robot text-violet-500 text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-6 rounded-2xl shadow card-hover">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-slate-500 font-medium">Energy today</p>
+                                    <p class="text-3xl font-bold mt-2">${totalEnergy} kWh</p>
+                                </div>
+                                <i class="fas fa-bolt text-amber-500 text-3xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white/85 border border-slate-200 p-6 rounded-2xl shadow">
+                            <div class="flex items-start justify-between gap-4 mb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold">Energy consumption (24h)</h3>
+                                    <p class="text-sm text-slate-500">A quick look at the house load curve.</p>
+                                </div>
+                                <span class="section-chip">Peak hour</span>
+                            </div>
+                            <canvas id="energyChart" height="220"></canvas>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-6 rounded-2xl shadow">
+                            <div class="flex items-start justify-between gap-4 mb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold">Room snapshot</h3>
+                                    <p class="text-sm text-slate-500">Where the house is active right now.</p>
+                                </div>
+                                <span class="section-chip">Live</span>
+                            </div>
+                            <div class="space-y-3">
+                                ${roomList.map(room => {
+                                    const roomDevices = devices.filter(d => d.room === room);
+                                    const active = roomDevices.filter(d => d.type !== "lock" && d.isOn).length;
+                                    return `<div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 flex items-center justify-between">
+                                        <div>
+                                            <p class="font-semibold">${room}</p>
+                                            <p class="text-xs text-slate-500">${roomDevices.length} devices</p>
+                                        </div>
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${active} active</span>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid lg:grid-cols-3 gap-6">
+                        <div class="bg-white/85 border border-slate-200 p-6 rounded-2xl shadow lg:col-span-2">
+                            <h3 class="text-lg font-bold mb-4">Recent devices</h3>
+                            <div class="space-y-3">${recentDevices.map(d => `
+                                <div class="flex justify-between items-center p-3 rounded-xl border border-slate-200 bg-white/70">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-10 h-10 rounded-xl grid place-items-center bg-slate-900 text-white shrink-0">
+                                            <i class="fas ${d.type === 'light' ? 'fa-lightbulb' : d.type === 'thermostat' ? 'fa-temperature-half' : d.type === 'lock' ? 'fa-lock' : 'fa-plug'}"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="font-semibold truncate">${d.name}</p>
+                                            <p class="text-xs text-slate-500 truncate">${d.room}</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${d.type === 'lock' ? (d.metadata.locked ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700') : d.type === 'camera' || d.type === 'sensor' ? 'bg-sky-100 text-sky-700' : d.isOn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${deviceStateLabel(d)}</span>
+                                </div>`).join('')}</div>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-6 rounded-2xl shadow">
+                            <h3 class="text-lg font-bold mb-4">Automation status</h3>
+                            <div class="space-y-3">
+                                ${automationRules.slice(0, 3).map(rule => `
+                                    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <p class="font-semibold">${rule.name}</p>
+                                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${rule.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${rule.enabled ? 'On' : 'Off'}</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-2">Triggered ${rule.triggerCount} times</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById("pageContent").innerHTML = html;
+            const ctx = document.getElementById('energyChart')?.getContext('2d');
+            if (ctx) {
+                if (currentChart) currentChart.destroy();
+                currentChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: energyReadings.map(r => `${r.hour}:00`), datasets: [{ label: 'kWh', data: energyReadings.map(r => r.usage), borderColor: '#3b82f6', tension: 0.3 }] },
+                    options: { responsive: true, maintainAspectRatio: true }
+                });
+            }
+        }
+
+        function renderDevices() {
+            const onlineCount = devices.filter(d => d.isOnline).length;
+            const activeCount = devices.filter(d => d.type !== "lock" && d.isOn).length;
+            const lockCount = devices.filter(d => d.type === "lock").length;
+            const cameraCount = devices.filter(d => d.type === "camera").length;
+            const html = pageShell(
+                "Devices",
+                "See every connected device in one place and make quick changes without leaving the control center.",
+                `
+                    <button onclick="window.goToPage('rooms')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Rooms</button>
+                    <button onclick="window.goToPage('security')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Security</button>
+                    <button onclick="window.applyMode('Away')" class="px-4 py-2 rounded-full bg-slate-900 text-white font-semibold hover:-translate-y-0.5">Away mode</button>
+                `,
+                `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Devices online</p>
+                            <p class="text-3xl font-bold mt-2">${onlineCount}</p>
+                            <p class="text-sm text-slate-500 mt-2">Reachable right now</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Active devices</p>
+                            <p class="text-3xl font-bold mt-2">${activeCount}</p>
+                            <p class="text-sm text-slate-500 mt-2">Currently switched on</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Locks installed</p>
+                            <p class="text-3xl font-bold mt-2">${lockCount}</p>
+                            <p class="text-sm text-slate-500 mt-2">Security endpoints</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Cameras online</p>
+                            <p class="text-3xl font-bold mt-2">${cameraCount}</p>
+                            <p class="text-sm text-slate-500 mt-2">Live surveillance</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        ${devices.map(device => `
+                            <div class="bg-white/85 border border-slate-200 rounded-2xl shadow p-5 card-hover">
+                                <div class="flex justify-between items-start gap-4">
+                                    <div class="flex items-center space-x-3 min-w-0">
+                                        <i class="fas ${iconForDevice(device.type)} text-2xl ${device.isOn ? 'text-blue-500' : 'text-gray-400'}"></i>
+                                        <div class="min-w-0">
+                                            <h3 class="font-semibold truncate">${device.name}</h3>
+                                            <p class="text-xs text-gray-500 truncate">${device.room}</p>
+                                        </div>
+                                    </div>
+                                    ${device.type === "lock" ? `<button onclick="window.toggleLock('${device.id}')" class="p-2 rounded-full ${device.metadata.locked ? 'bg-emerald-500' : 'bg-rose-500'}"><i class="fas ${device.metadata.locked ? 'fa-lock' : 'fa-unlock'} text-white text-sm"></i></button>` : device.capabilities.includes("onoff") ? `<button onclick="window.toggleDevice('${device.id}')" class="p-2 rounded-full ${device.isOn ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}"><i class="fas fa-power-off text-white text-sm"></i></button>` : `<span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">Read only</span>`}
+                                </div>
+                                <div class="mt-4 flex items-center justify-between text-sm">
+                                    <span class="text-slate-500">Status</span>
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${device.type === 'lock' ? (device.metadata.locked ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700') : device.type === 'camera' || device.type === 'sensor' ? 'bg-sky-100 text-sky-700' : device.isOn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${deviceStateLabel(device)}</span>
+                                </div>
+                                ${device.capabilities.includes("brightness") ? `<div class="mt-3"><input type="range" min="0" max="100" value="${device.metadata.brightness || 0}" onchange="window.setBrightness('${device.id}', this.value)" class="w-full"><p class="text-xs text-center mt-1 text-slate-500">${device.metadata.brightness || 0}% Brightness</p></div>` : ""}
+                                ${device.type === "thermostat" ? `<div class="mt-3 flex justify-between items-center gap-3 text-sm"><span class="text-slate-500">${device.metadata.temperature}&deg;C now</span><div><button onclick="window.adjustTemp('${device.id}', -1)" class="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">-</button><span class="mx-2 font-semibold">${device.metadata.targetTemperature || 21}&deg;C</span><button onclick="window.adjustTemp('${device.id}', 1)" class="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">+</button></div></div>` : ""}
+                                ${device.type === "lock" ? `<button onclick="window.toggleLock('${device.id}')" class="mt-3 w-full py-2 rounded-lg ${device.metadata.locked ? 'bg-emerald-600' : 'bg-rose-500'} text-white font-semibold">${device.metadata.locked ? 'Unlock' : 'Lock'}</button>` : ""}
+                            </div>
+                        `).join("")}
+                    </div>
+                `
+            );
+            document.getElementById("pageContent").innerHTML = html;
+        }
+
+        function renderRooms() {
+            const roomNames = [...new Set(devices.map(d => d.room))];
+            const activeRooms = roomNames.filter(room => devices.filter(d => d.room === room).some(d => d.type !== "lock" && d.isOn));
+            const thermostats = devices.filter(d => d.type === "thermostat");
+            const cameras = devices.filter(d => d.type === "camera");
+            const html = pageShell(
+                "Rooms",
+                "Move from room to room with a clear summary of devices, comfort, and what is active right now.",
+                `
+                    <button onclick="window.goToPage('dashboard')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Dashboard</button>
+                    <button onclick="window.goToPage('security')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Security</button>
+                    <button onclick="window.goToPage('devices')" class="px-4 py-2 rounded-full bg-slate-900 text-white font-semibold hover:-translate-y-0.5">Open devices</button>
+                `,
+                `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Rooms mapped</p>
+                            <p class="text-3xl font-bold mt-2">${roomNames.length}</p>
+                            <p class="text-sm text-slate-500 mt-2">Unique areas in the home</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Active rooms</p>
+                            <p class="text-3xl font-bold mt-2">${activeRooms.length}</p>
+                            <p class="text-sm text-slate-500 mt-2">Spaces with devices on</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Thermostats</p>
+                            <p class="text-3xl font-bold mt-2">${thermostats.length}</p>
+                            <p class="text-sm text-slate-500 mt-2">Climate control points</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Cameras</p>
+                            <p class="text-3xl font-bold mt-2">${cameras.length}</p>
+                            <p class="text-sm text-slate-500 mt-2">Live security coverage</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        ${roomNames.map(room => {
+                            const summary = roomSummary(room);
+                            return `
+                                <article class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div>
+                                            <span class="section-chip">${room}</span>
+                                            <h3 class="text-2xl font-bold mt-3">${room}</h3>
+                                            <p class="mt-2 text-slate-500">${summary.roomDevices.length} devices, ${summary.activeDevices.length} active right now.</p>
+                                        </div>
+                                        <div class="w-12 h-12 rounded-2xl grid place-items-center bg-slate-900 text-white">
+                                            <i class="fas ${iconForRoom(room)}"></i>
+                                        </div>
+                                    </div>
+                                    <div class="mt-5 grid grid-cols-3 gap-3 text-sm">
+                                        <div class="rounded-xl bg-slate-50/80 border border-slate-200 p-3">
+                                            <p class="text-slate-500">Devices</p>
+                                            <p class="mt-1 text-lg font-bold">${summary.roomDevices.length}</p>
+                                        </div>
+                                        <div class="rounded-xl bg-slate-50/80 border border-slate-200 p-3">
+                                            <p class="text-slate-500">Active</p>
+                                            <p class="mt-1 text-lg font-bold">${summary.activeDevices.length}</p>
+                                        </div>
+                                        <div class="rounded-xl bg-slate-50/80 border border-slate-200 p-3">
+                                            <p class="text-slate-500">Climate</p>
+                                            <p class="mt-1 text-lg font-bold">${summary.climateLabel}</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 space-y-2">
+                                        ${summary.roomDevices.slice(0, 4).map(device => `
+                                            <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white/70 px-3 py-2">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <div class="w-9 h-9 rounded-xl grid place-items-center bg-slate-900 text-white shrink-0">
+                                                        <i class="fas ${iconForDevice(device.type)}"></i>
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <p class="font-semibold truncate">${device.name}</p>
+                                                        <p class="text-xs text-slate-500 truncate">${device.type}</p>
+                                                    </div>
+                                                </div>
+                                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${device.type === 'lock' ? (device.metadata.locked ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700') : device.type === 'camera' || device.type === 'sensor' ? 'bg-sky-100 text-sky-700' : device.isOn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${deviceStateLabel(device)}</span>
+                                            </div>
+                                        `).join("")}
+                                    </div>
+                                </article>
+                            `;
+                        }).join("")}
+                    </div>
+                `
+            );
+            document.getElementById("pageContent").innerHTML = html;
+        }
+
+        function renderSecurity() {
+            const summary = securitySummary();
+            const lockedCount = summary.locks.filter(d => d.metadata.locked).length;
+            const issueCards = summary.issues.map(issue => {
+                const iconClass = issue.tone === "rose" ? "fa-triangle-exclamation" : issue.tone === "amber" ? "fa-bell" : "fa-shield-halved";
+                const toneClass = issue.tone === "rose" ? "bg-rose-100 text-rose-700" : issue.tone === "amber" ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-700";
+                return `
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl grid place-items-center ${toneClass}">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold">${issue.title}</p>
+                                <p class="text-sm text-slate-500">${issue.detail}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+            const securityDevices = [...summary.locks, ...summary.cameras, ...summary.sensors].map(device => {
+                const statusClass = device.type === "lock"
+                    ? (device.metadata.locked ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")
+                    : device.type === "camera"
+                        ? "bg-sky-100 text-sky-700"
+                        : device.metadata.motionDetected
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-slate-100 text-slate-500";
+                const detailLine = device.type === "lock"
+                    ? `<button onclick="window.toggleLock('${device.id}')" class="mt-3 w-full py-2 rounded-lg ${device.metadata.locked ? 'bg-emerald-600' : 'bg-rose-500'} text-white font-semibold">${device.metadata.locked ? "Unlock" : "Lock"}</button>`
+                    : device.type === "sensor"
+                        ? `<p class="mt-3 text-sm text-slate-500">Motion status updates live from the hallway sensor.</p>`
+                        : `<p class="mt-3 text-sm text-slate-500">Camera feed is online and available in the monitoring system.</p>`;
+                return `
+                    <div class="rounded-xl border border-slate-200 bg-white/70 p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-xl grid place-items-center bg-slate-900 text-white shrink-0">
+                                    <i class="fas ${iconForDevice(device.type)}"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-semibold truncate">${device.name}</p>
+                                    <p class="text-xs text-slate-500 truncate">${device.room}</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}">${deviceStateLabel(device)}</span>
+                        </div>
+                        ${detailLine}
+                    </div>
+                `;
+            }).join("");
+            const html = pageShell(
+                "Security",
+                "Keep an eye on locks, cameras, and motion sensors from one clear security view.",
+                `
+                    <button onclick="window.applyMode('Away')" class="px-4 py-2 rounded-full bg-slate-900 text-white font-semibold hover:-translate-y-0.5">Arm home</button>
+                    <button onclick="window.goToPage('rooms')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Rooms</button>
+                    <button onclick="window.goToPage('devices')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Devices</button>
+                `,
+                `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Locks armed</p>
+                            <p class="text-3xl font-bold mt-2">${lockedCount}/${summary.locks.length}</p>
+                            <p class="text-sm text-slate-500 mt-2">${summary.armed ? "All entry points secured" : "Some locks need attention"}</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Cameras live</p>
+                            <p class="text-3xl font-bold mt-2">${summary.cameras.length}</p>
+                            <p class="text-sm text-slate-500 mt-2">Recording and available</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Motion sensors</p>
+                            <p class="text-3xl font-bold mt-2">${summary.sensors.length}</p>
+                            <p class="text-sm text-slate-500 mt-2">${summary.activeMotion.length} reporting motion</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Security mode</p>
+                            <p class="text-3xl font-bold mt-2">${homeMode}</p>
+                            <p class="text-sm text-slate-500 mt-2">${summary.armed ? "Ready to stay secure" : "Review alerts below"}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow">
+                            <div class="flex items-start justify-between gap-4 mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold">Security alerts</h3>
+                                    <p class="text-sm text-slate-500">The latest issues detected by the home.</p>
+                                </div>
+                                <span class="section-chip">${summary.armed ? "All clear" : "Attention"}</span>
+                            </div>
+                            <div class="space-y-3">${issueCards}</div>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow">
+                            <div class="flex items-start justify-between gap-4 mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold">Security devices</h3>
+                                    <p class="text-sm text-slate-500">Locks, cameras, and motion sensors in one list.</p>
+                                </div>
+                                <span class="section-chip">${summary.locks.length + summary.cameras.length + summary.sensors.length} devices</span>
+                            </div>
+                            <div class="space-y-3">${securityDevices}</div>
+                        </div>
+                    </div>
+                `
+            );
+            document.getElementById("pageContent").innerHTML = html;
+        }
+
+        function renderAutomations() {
+            const enabledCount = automationRules.filter(rule => rule.enabled).length;
+            const timeRules = automationRules.filter(rule => rule.condition.type === "time").length;
+            const motionRules = automationRules.filter(rule => rule.condition.type === "motion").length;
+            const html = pageShell(
+                "Automations",
+                "Rules that watch the clock and the house so the daily routine can happen automatically.",
+                `
+                    <button id="openRuleModalBtn" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-full font-semibold"><i class="fas fa-plus mr-2"></i>Create rule</button>
+                    <button onclick="window.goToPage('scenes')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Scenes</button>
+                `,
+                `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Total rules</p>
+                            <p class="text-3xl font-bold mt-2">${automationRules.length}</p>
+                            <p class="text-sm text-slate-500 mt-2">Saved in the app</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Enabled rules</p>
+                            <p class="text-3xl font-bold mt-2">${enabledCount}</p>
+                            <p class="text-sm text-slate-500 mt-2">Running right now</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Time rules</p>
+                            <p class="text-3xl font-bold mt-2">${timeRules}</p>
+                            <p class="text-sm text-slate-500 mt-2">Clock-based actions</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Motion rules</p>
+                            <p class="text-3xl font-bold mt-2">${motionRules}</p>
+                            <p class="text-sm text-slate-500 mt-2">Sensor-driven actions</p>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        ${automationRules.map(rule => `
+                            <div class="bg-white/85 border border-slate-200 p-4 rounded-2xl shadow flex justify-between items-center gap-4">
+                                <div class="min-w-0">
+                                    <h3 class="font-semibold truncate">${rule.name}</h3>
+                                    <p class="text-sm text-gray-500">Triggered ${rule.triggerCount} times &bull; ${rule.lastTriggered ? new Date(rule.lastTriggered).toLocaleTimeString() : "never"}</p>
+                                </div>
+                                <div class="flex space-x-2 shrink-0">
+                                    <button onclick="window.toggleRule('${rule.id}')" class="p-2 rounded-lg ${rule.enabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}"><i class="fas fa-power-off"></i></button>
+                                    <button onclick="window.deleteRule('${rule.id}')" class="p-2 rounded-lg bg-red-100 text-red-600"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        `).join("")}
+                    </div>
+                `
+            );
+            document.getElementById("pageContent").innerHTML = html;
+            document.getElementById("openRuleModalBtn")?.addEventListener("click", () => openModal());
+        }
+
+        function renderScenes() {
+            const html = pageShell(
+                "Scenes",
+                "Tap once to shift the house into a known state for mornings, movies, bedtime, and away mode.",
+                `
+                    <button onclick="window.goToPage('dashboard')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Dashboard</button>
+                    <button onclick="window.goToPage('energy')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Energy</button>
+                `,
+                `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Scenes saved</p>
+                            <p class="text-3xl font-bold mt-2">${scenes.length}</p>
+                            <p class="text-sm text-slate-500 mt-2">Ready to launch</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Current mode</p>
+                            <p class="text-3xl font-bold mt-2">${homeMode}</p>
+                            <p class="text-sm text-slate-500 mt-2">Last applied preset</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Active devices</p>
+                            <p class="text-3xl font-bold mt-2">${devices.filter(d => d.isOn).length}</p>
+                            <p class="text-sm text-slate-500 mt-2">After scene changes</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Devices linked</p>
+                            <p class="text-3xl font-bold mt-2">${[...new Set(scenes.flatMap(scene => scene.devices.map(action => action.id)))].length}</p>
+                            <p class="text-sm text-slate-500 mt-2">Devices included across scenes</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        ${scenes.map(scene => `
+                            <div class="bg-white/85 border border-slate-200 rounded-2xl shadow p-5 text-center card-hover cursor-pointer" onclick="window.activateScene('${scene.id}')">
+                                <div class="w-16 h-16 rounded-2xl mx-auto grid place-items-center bg-slate-900 text-white">
+                                    <i class="fas ${scene.icon} text-2xl"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold mt-4">${scene.name}</h3>
+                                <p class="text-sm text-gray-500 mt-2">${scene.devices.length} devices included</p>
+                                <button class="mt-4 bg-slate-900 text-white px-4 py-2 rounded-full text-sm font-semibold">Activate</button>
+                            </div>
+                        `).join("")}
+                    </div>
+                `
+            );
+            document.getElementById("pageContent").innerHTML = html;
+        }
+
+        function renderEnergyPage() {
+            const totalUsage = energyReadings.reduce((s, r) => s + parseFloat(r.usage), 0).toFixed(1);
+            const totalCost = energyReadings.reduce((s, r) => s + parseFloat(r.cost), 0).toFixed(2);
+            const peakReading = energyReadings.reduce((best, reading) => parseFloat(reading.usage) > parseFloat(best.usage) ? reading : best, energyReadings[0]);
+            const avgUsage = (energyReadings.reduce((sum, reading) => sum + parseFloat(reading.usage), 0) / energyReadings.length).toFixed(1);
+            const html = pageShell(
+                "Energy",
+                "Watch the last 24 hours of usage and spot the peak window before it becomes a bigger bill.",
+                `
+                    <button onclick="window.goToPage('dashboard')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Dashboard</button>
+                    <button onclick="window.goToPage('devices')" class="px-4 py-2 rounded-full border border-slate-200 bg-white/80 font-semibold hover:-translate-y-0.5">Devices</button>
+                `,
+                `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Total usage</p>
+                            <p class="text-3xl font-bold mt-2">${totalUsage} kWh</p>
+                            <p class="text-sm text-slate-500 mt-2">Across the last 24 hours</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Estimated cost</p>
+                            <p class="text-3xl font-bold mt-2">$${totalCost}</p>
+                            <p class="text-sm text-slate-500 mt-2">Based on current snapshot</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Average load</p>
+                            <p class="text-3xl font-bold mt-2">${avgUsage} kWh</p>
+                            <p class="text-sm text-slate-500 mt-2">Per hourly reading</p>
+                        </div>
+                        <div class="bg-white/85 border border-slate-200 p-5 rounded-2xl shadow card-hover">
+                            <p class="text-slate-500 font-medium">Peak hour</p>
+                            <p class="text-3xl font-bold mt-2">${peakReading?.hour || 0}:00</p>
+                            <p class="text-sm text-slate-500 mt-2">${peakReading ? `${peakReading.usage} kWh` : "No data"}</p>
+                        </div>
+                    </div>
+                    <div class="bg-white/85 border border-slate-200 p-6 rounded-2xl shadow">
+                        <div class="flex items-start justify-between gap-4 mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold">Hourly usage</h3>
+                                <p class="text-sm text-slate-500">A compact chart of consumption and cost signals.</p>
+                            </div>
+                            <span class="section-chip">24 hours</span>
+                        </div>
+                        <canvas id="energyDetailChart" height="250"></canvas>
+                    </div>
+                `
+            );
+            document.getElementById("pageContent").innerHTML = html;
+            const ctx = document.getElementById('energyDetailChart')?.getContext('2d');
+            if (ctx) {
+                if (currentChart) currentChart.destroy();
+                currentChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: energyReadings.map(r => `${r.hour}:00`), datasets: [{ label: 'kWh', data: energyReadings.map(r => r.usage), backgroundColor: '#3b82f6' }] }
+                });
+            }
+        }
+
+        // Global actions for UI
+        window.toggleDevice = (id) => {
+            const dev = devices.find(d => d.id === id);
+            if (!dev) return;
+            if (dev.type === "lock") {
+                window.toggleLock(id);
+                return;
+            }
+            if (dev.capabilities.includes('onoff')) updateDevice(id, { isOn: !dev.isOn });
+        };
+        window.setBrightness = (id, val) => {
+            const dev = devices.find(d => d.id === id);
+            if (!dev) return;
+            updateDevice(id, { metadata: { ...dev.metadata, brightness: parseInt(val, 10) || 0 } });
+        };
+        window.adjustTemp = (id, delta) => {
+            const dev = devices.find(d => d.id === id);
+            if (!dev) return;
+            const newTarget = (dev.metadata.targetTemperature || 21) + delta;
+            updateDevice(id, { metadata: { ...dev.metadata, targetTemperature: Math.min(30, Math.max(16, newTarget)) } });
+        };
+        window.toggleLock = (id) => {
+            const dev = devices.find(d => d.id === id);
+            if (!dev) return;
+            updateDevice(id, { metadata: { ...dev.metadata, locked: !dev.metadata.locked } });
+        };
+        window.toggleRule = (id) => {
+            const rule = automationRules.find(r => r.id === id);
+            if (rule) { rule.enabled = !rule.enabled; saveData(); renderAutomations(); }
+        };
+        window.deleteRule = (id) => {
+            automationRules = automationRules.filter(r => r.id !== id);
+            saveData();
+            renderAutomations();
+        };
+        window.activateScene = (sceneId) => {
+            const scene = scenes.find(s => s.id === sceneId);
+            if (scene) {
+                scene.devices.forEach(devAction => {
+                    const target = devices.find(d => d.id === devAction.id);
+                    if (target) {
+                        if (devAction.state !== undefined) target.isOn = devAction.state;
+                        if (devAction.brightness !== undefined) target.metadata = { ...target.metadata, brightness: devAction.brightness };
+                        if (devAction.locked !== undefined) target.metadata = { ...target.metadata, locked: devAction.locked };
+                    }
+                });
+                saveData();
+                renderCurrentPage();
+            }
+        };
+
+        // Modal logic
+        function openModal() {
+            const select = document.getElementById("ruleDevice");
+            select.innerHTML = devices.filter(d => d.capabilities.includes('onoff')).map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+            document.getElementById("ruleModal").classList.remove("hidden");
+        }
+        document.getElementById("closeModalBtn")?.addEventListener("click", () => document.getElementById("ruleModal").classList.add("hidden"));
+        document.getElementById("ruleForm")?.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const name = document.getElementById("ruleName").value;
+            const time = document.getElementById("ruleTime").value;
+            const deviceId = document.getElementById("ruleDevice").value;
+            const actionState = document.getElementById("ruleActionState").value;
+            if (name && time && deviceId) {
+                const newRule = {
+                    id: "r" + Date.now(), name, enabled: true,
+                    condition: { type: "time", value: time },
+                    action: { deviceId, state: actionState },
+                    triggerCount: 0, lastTriggered: null, lastTriggeredMinute: null
+                };
+                automationRules.push(newRule);
+                saveData();
+                renderAutomations();
+                document.getElementById("ruleModal").classList.add("hidden");
+                document.getElementById("ruleForm").reset();
+            }
+        });
+
+        // Navigation & Dark Mode
+        let currentPage = "dashboard";
+        let homeMode = "Home";
+        window.currentPage = currentPage;
+        window.homeMode = homeMode;
+
+        function syncNavState(page) {
+            document.querySelectorAll(".nav-link").forEach(link => {
+                const isActive = link.getAttribute("data-page") === page;
+                link.classList.toggle("bg-gray-100", isActive);
+                link.classList.toggle("dark:bg-gray-700", isActive);
+                link.classList.toggle("text-blue-600", isActive);
+                link.setAttribute("aria-current", isActive ? "page" : "false");
+            });
+        }
+
+        function renderCurrentPage() {
+            if (!["dashboard", "energy"].includes(currentPage) && currentChart) {
+                currentChart.destroy();
+                currentChart = null;
+            }
+
+            switch (currentPage) {
+                case "dashboard":
+                    renderDashboard();
+                    break;
+                case "rooms":
+                    renderRooms();
+                    break;
+                case "devices":
+                    renderDevices();
+                    break;
+                case "automations":
+                    renderAutomations();
+                    break;
+                case "scenes":
+                    renderScenes();
+                    break;
+                case "energy":
+                    renderEnergyPage();
+                    break;
+                case "security":
+                    renderSecurity();
+                    break;
+                default:
+                    currentPage = "dashboard";
+                    window.currentPage = currentPage;
+                    renderDashboard();
+                    break;
+            }
+        }
+
+        function setPage(page, options = {}) {
+            const nextPage = normalizePage(page);
+            const shouldUpdateHash = options.updateHash !== false;
+
+            if (shouldUpdateHash && (location.hash || "").slice(1) !== nextPage) {
+                location.hash = nextPage;
+                return;
+            }
+
+            currentPage = nextPage;
+            window.currentPage = nextPage;
+            saveData();
+            syncNavState(nextPage);
+            document.title = `SmartHome | ${getPageLabel(nextPage)}`;
+            renderCurrentPage();
+
+            if (window.innerWidth < 1024) {
+                document.getElementById("sidebar").classList.add("-translate-x-full");
+            }
+        }
+
+        window.goToPage = (page) => setPage(page, { updateHash: true });
+        window.applyMode = (mode) => {
+            homeMode = mode;
+            window.homeMode = mode;
+            const presets = {
+                Away: [
+                    ["1", { isOn: false }],
+                    ["2", { isOn: false }],
+                    ["6", { isOn: false }],
+                    ["8", { isOn: false }],
+                    ["7", { isOn: true }],
+                    ["3", { metadata: { ...(devices.find(d => d.id === "3")?.metadata || {}), locked: true } }],
+                    ["5", { metadata: { ...(devices.find(d => d.id === "5")?.metadata || {}), targetTemperature: 17 } }]
+                ],
+                Home: [
+                    ["1", { isOn: true }],
+                    ["2", { isOn: false }],
+                    ["6", { isOn: false }],
+                    ["8", { isOn: true }],
+                    ["3", { metadata: { ...(devices.find(d => d.id === "3")?.metadata || {}), locked: true } }],
+                    ["5", { metadata: { ...(devices.find(d => d.id === "5")?.metadata || {}), targetTemperature: 21 } }],
+                    ["7", { isOn: true }]
+                ],
+                Night: [
+                    ["1", { isOn: false }],
+                    ["2", { isOn: false }],
+                    ["6", { isOn: true }],
+                    ["8", { isOn: false }],
+                    ["3", { metadata: { ...(devices.find(d => d.id === "3")?.metadata || {}), locked: true } }],
+                    ["5", { metadata: { ...(devices.find(d => d.id === "5")?.metadata || {}), targetTemperature: 20 } }]
+                ],
+                Vacation: [
+                    ["1", { isOn: false }],
+                    ["2", { isOn: false }],
+                    ["6", { isOn: false }],
+                    ["8", { isOn: false }],
+                    ["3", { metadata: { ...(devices.find(d => d.id === "3")?.metadata || {}), locked: true } }],
+                    ["5", { metadata: { ...(devices.find(d => d.id === "5")?.metadata || {}), targetTemperature: 17 } }],
+                    ["7", { isOn: true }]
+                ]
+            };
+
+            (presets[mode] || []).forEach(([id, updates]) => {
+                const device = devices.find(d => d.id === id);
+                if (device) {
+                    Object.assign(device, updates);
+                    device.lastSeen = new Date().toISOString();
+                }
+            });
+
+            saveData();
+            renderCurrentPage();
+        };
+
+        document.querySelectorAll(".nav-link").forEach(link => {
+            link.addEventListener("click", (e) => {
+                e.preventDefault();
+                window.goToPage(link.getAttribute("data-page"));
+            });
+        });
+
+        window.addEventListener("hashchange", () => {
+            const route = (location.hash || "").replace(/^#/, "");
+            setPage(route || "dashboard", { updateHash: false });
+        });
+
+        document.getElementById("openSidebarBtn").addEventListener("click", () => document.getElementById("sidebar").classList.remove("-translate-x-full"));
+        document.getElementById("closeSidebarBtn").addEventListener("click", () => document.getElementById("sidebar").classList.add("-translate-x-full"));
+
+        // Dark mode
+        try {
+            if (localStorage.getItem("darkMode") === "true") document.documentElement.classList.add("dark");
+        } catch (error) {
+            console.warn("Unable to read dark mode preference.", error);
+        }
+        document.getElementById("darkModeToggle").addEventListener("click", () => {
+            document.documentElement.classList.toggle("dark");
+            try {
+                localStorage.setItem("darkMode", document.documentElement.classList.contains("dark"));
+            } catch (error) {
+                console.warn("Unable to store dark mode preference.", error);
+            }
+        });
+
+        // Init
+        loadData();
+        try {
+            homeMode = localStorage.getItem("sm_homeMode") || homeMode;
+        } catch (error) {
+            console.warn("Unable to restore home mode.", error);
+        }
+        window.homeMode = homeMode;
+
+        const storedPage = (() => {
+            try {
+                return localStorage.getItem("sm_currentPage") || "dashboard";
+            } catch (error) {
+                return "dashboard";
+            }
+        })();
+        const hashPage = (location.hash || "").replace(/^#/, "");
+        const initialPage = hashPage ? normalizePage(hashPage) : normalizePage(storedPage);
+        if (!location.hash) history.replaceState(null, "", `#${initialPage}`);
+
+        setPage(initialPage, { updateHash: false });
+        startSimulation();
+    </script>
+</body>
+</html>
